@@ -1,0 +1,31 @@
+[
+    ["Haydn", 1732, 0, "born"],
+    ["Haydn", "1809-05-31", 0, "died"],
+    ["Haydn", 1758, 10, "1/2"],
+    ["Haydn", 1769, 6, "9"],
+    ["Haydn", 1771, 6, "17"],
+    ["Haydn", 1772, 6, "20"],
+    ["Haydn", 1781, 6, "33"],
+    ["Haydn", 1785, 1, "42"],
+    ["Haydn", 1787, 6, "50"],
+    ["Haydn", 1788, 6, "54/5"],
+    ["Haydn", 1790, 6, "64"],
+    ["Haydn", 1793, 6, "71/74"],
+    ["Haydn", 1797, 6, "76"],
+    ["Haydn", 1799, 2, "77"],
+    ["Haydn", 1803, 0.5, "103"],
+
+    ["Mozart", "1756-01-26", 0, "born"],
+    ["Mozart", "1791-12-05", 0, "died"],
+    ["Mozart", 1770, 1, "K80 'Lodi'"],
+    ["Mozart", 1772, 6, "K155-160 'Milanese'"],
+    ["Mozart", 1773, 6, "K168-173 'Viennese'"],
+    ["Mozart", 1782, 6, "6 'Haydn'"],
+    ["Mozart", 1786, 1, "K499\n'Hoffmeister'"],
+    ["Mozart", 1789, 3, "3 'Prussian'"],
+
+    ["Beethoven", "1770-12-16", 0, "born"],
+    ["Beethoven", 1800, 6, "18 'Lobkowitz'"],
+    ["Beethoven", 1808, 3, "59 'Razumovsky'"],
+    ["Beethoven", 1809, 1, "74 'Harp'"]
+]

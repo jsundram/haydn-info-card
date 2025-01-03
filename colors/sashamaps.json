@@ -1,0 +1,94 @@
+{
+    "colors": [
+        {
+            "name": "grey",
+            "value": "rgba(169, 169, 169, 1)"
+        },
+        {
+            "name": "red",
+            "value": "rgba(230, 25, 75, 1)"
+        },
+        {
+            "name": "orange",
+            "value": "rgba(245, 130, 49, 1)"
+        },
+        {
+            "name": "yellow",
+            "value": "rgba(255, 225, 25, 1)"
+        },
+        {
+            "name": "lime",
+            "value": "rgba(191, 239, 69, 1)"
+        },
+        {
+            "name": "green",
+            "value": "rgba(60, 180, 75, 1)"
+        },
+        {
+            "name": "cyan",
+            "value": "rgba(66, 212, 244, 1)"
+        },
+        {
+            "name": "blue",
+            "value": "rgba(67, 99, 216, 1)"
+        },
+        {
+            "name": "purple",
+            "value": "rgba(145, 30, 180, 1)"
+        },
+        {
+            "name": "magenta",
+            "value": "rgba(240, 50, 230, 1)"
+        },
+        {
+            "name": "maroon",
+            "value": "rgba(128, 0, 0, 1)"
+        },
+        {
+            "name": "brown",
+            "value": "rgba(154, 99, 36, 1)"
+        },
+        {
+            "name": "olive",
+            "value": "rgba(128, 128, 0, 1)"
+        },
+        {
+            "name": "teal",
+            "value": "rgba(70, 153, 144, 1)"
+        },
+        {
+            "name": "navy",
+            "value": "rgba(0, 0, 117, 1)"
+        },
+        {
+            "name": "black",
+            "value": "rgba(0, 0, 0, 1)"
+        },
+        {
+            "name": "pink",
+            "value": "rgba(250, 190, 212, 1)"
+        },
+        {
+            "name": "apricot",
+            "value": "rgba(255, 216, 177, 1)"
+        },
+        {
+            "name": "beige",
+            "value": "rgba(255, 250, 200, 1)"
+        },
+        {
+            "name": "mint",
+            "value": "rgba(170, 255, 195, 1)"
+        },
+        {
+            "name": "lavender",
+            "value": "rgba(220, 190, 255, 1)"
+        },
+        {
+            "name": "white",
+            "value": "rgba(255, 255, 255, 1)"
+        }
+    ],
+    "name": "sashamaps",
+    "key": null
+}
