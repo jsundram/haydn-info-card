@@ -3,12 +3,8 @@
 ## To Generate the latest card:
 
 1. Make whatever edits need to be made.
-2. Run `uv run src/annotate.py -o output/annotate.pdf` to generate "annotate.pdf", which is the legend/explainer for the card.
-3. Run `uv run src/table-portrait.py -o ./output/table-portrait-test.pdf -a ./output/annotate.pdf -c ./colors/sashamaps.json -d ./data` for the front of the card, which generates "table-portrait-test.pdf". 
-4. Run ` uv run src/timeline.py -o output/timeline.pdf -c ./colors/sashamaps.json -d ./data` which generates "timeline.pdf"
-5. Run `uv run src/graph.py -t output/timeline.pdf -o output/graph_paper.pdf -d ./data` for the back of the card, which generates "graph_paper.pdf"
-6. Run `uv run src/merge.py -f output/table-portrait-test.pdf -b output/graph_paper.pdf -o output/merged.pdf`
-7. Rename merged.pdf to "Haydn Info Card - Sundram - MM-DD-YYYY.pdf"
+2. `run ./make_card.sh`
+3. This will create the file  `output/Haydn Info Card - Sundram - MM-DD-YYYY.pdf`
 
 
 ## Version History
