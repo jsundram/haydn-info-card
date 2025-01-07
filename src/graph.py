@@ -57,16 +57,31 @@ def create_graph_paper(pdf_path, clr):
     return c
 
 
+def get_highlight_color(color_dict, color_name):
+    match color_name:
+        case 'lavender':
+            c, l = color_dict[color_name]['value'], .75
+        case 'grey':
+            c, l = color_dict[color_name]['value'], .25
+        case _:
+            l = .5
+            try:
+                c = color_dict[grid_color]['value']
+            except KeyError:
+                c = colors.Color(.25, .25, .25, 1)
+
+    return colors.Whiter(c, l)
+
+
 @click.command()
 @click.option('-t', '--timeline-pdf', type=click.Path(exists=True), required=True, help="timeline pdf filepath")
 @click.option('-o', '--outfile', type=click.Path(writable=True), required=True, help="output filename")
 @click.option('-c', '--color-json', type=click.Path(exists=True), required=True, help="json file specifying colors")
-def main(timeline_pdf, outfile, color_json):
-    # Create and save the graph paper PDF
-    # c = colors.Color(.25, .25, .25, 1)  # for light gray background and one less dependency.
+@click.option('-g', '--grid-color', type=str, required=True, help="name of color to use (must be in color_json above).")
+def main(timeline_pdf, outfile, color_json, grid_color):
     color_dict = read.read_colors(color_json)
-    c = color_dict['lavender']['value']
-    h_color = colors.Whiter(c, .75)
+    h_color = get_highlight_color(color_dict, grid_color)
+
     pdf = create_graph_paper(outfile, h_color)
 
     width, height = letter
