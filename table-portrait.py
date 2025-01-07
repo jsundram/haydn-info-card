@@ -25,19 +25,6 @@ from reportlab.platypus.flowables import Flowable
 import read as Quartets
 from pdfimage import PdfImage
 
-"""
-This began as a copy of table.py
-
-Ideas:
-    1. Turn this into a portrait-oriented card,
-    2. use QuartetRoulette color scheme (limit color use)
-    3. Make Opus 1/2 into a smaller row of Pentagons
-    4. Put opus 42 on its own row??
-    5. Use Underline or something else to indicate minor keys
-    6. Consider moving Opus Text placement closer to top of cell.
-"""
-# warn on missing glyphs
-# clist = [(v, k) for (k, v) in colors.getAllNamedColors().items() if k[0].islower()]
 
 def get_styles():
     # Create Styles
@@ -176,6 +163,7 @@ def add_title(pdf, title, points, page, font="AppleChancery"):
     title_y = page.height - page.margin
     pdf.drawString(title_x, title_y, title)  # Draw the title on the canvas
 
+
 def add_version(pdf, page):
     # Draw vertical text for the current date
     text_x = page.margin - .1*inch
@@ -187,6 +175,7 @@ def add_version(pdf, page):
     pdf.setFillColor(colors.gray)
     pdf.drawString(0, 0, '© ' + datetime.now().strftime("%Y-%m-%d"))
     pdf.restoreState()
+
 
 def get_cell_table(q, cell_size, styles):
     bg_color = Quartets._bgcolor(q)
@@ -236,6 +225,7 @@ def get_cell_table(q, cell_size, styles):
         ])
     )
 
+
 def get_info_table(info, s, styles):
     return Table(
         [
@@ -247,6 +237,7 @@ def get_info_table(info, s, styles):
         colWidths=[s],
         rowHeights=[0.125 * s, 0.125 * s, .625 * s, 0.125 * s],
     )
+
 
 def get_lead_table(q, info, s, styles):
     bg_color = Quartets._bgcolor(q)
@@ -277,6 +268,7 @@ def get_lead_table(q, info, s, styles):
         ])
     )
 
+
 def build_table(quartets, page, styles, events):
     # Box Commands: GRID, BOX, OUTLINE, INNERGRID,
     #   BOX and OUTLINE are equivalent,
@@ -300,7 +292,6 @@ def build_table(quartets, page, styles, events):
     o42 = [q for q in quartets if q['opus'] == 42][0]
     o103 = [q for q in quartets if q['opus'] == 103][0]
     quartets = [q for q in quartets if q['opus'] > 2 and q['opus'] not in {42, 103}]
-    #quartets = [q for q in quartets if q['opus'] > 2]
 
     prev = None
     print(page)
@@ -493,6 +484,7 @@ def build_footer(page, styles):
         ])
     )
 
+
 def main(filename, colorfile=None):
     events = {
              1: {"year": 1758, "nickname": "Fürnberg", "notes":""},
@@ -570,22 +562,6 @@ def main(filename, colorfile=None):
 
     pdf.save()
 
-    print("Wrote %s. Opening ...." % filename)
-    subprocess.run(["open", filename])
-
 
 if __name__ == '__main__':
-    #main('table-Trello.pdf', './colors/Trello.json')
-    # main('table-tetrad32.pdf', './colors/tetrad-32.json')
-    # main('table-tetrad32r.pdf', './colors/tetrad-32r.json')
-    # main('table-SM.pdf', './colors/sashamaps.json')
     main('table-portrait-test.pdf', './colors/sashamaps.json')
-    # To produce a complete card, run this, then run timeline.py
-    # and use Preview to composite the two pdfs into a single one, then print
-    # two-sided
-    """
-    colorfiles = glob.glob('./colors/*.json')
-    for c in colorfiles:
-        name = os.path.splitext(os.path.basename(c))[0]
-        main("table-%s.pdf" % name, c)
-    """
