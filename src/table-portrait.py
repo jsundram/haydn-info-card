@@ -25,17 +25,9 @@ from reportlab.platypus.flowables import Flowable
 import read as Quartets
 from pdfimage import PdfImage
 
-
 def get_styles():
     # Create Styles
     styles = getSampleStyleSheet()
-    centered = copy.deepcopy(styles['BodyText'])
-    centered.name = 'Star'
-    centered.alignment = TA_CENTER
-    centered.textColor = colors.gold
-    centered.fontSize = 50
-    centered.leading = centered.fontSize*1.33
-    styles.add(centered)
 
     peters = copy.deepcopy(styles['BodyText'])
     peters.name = 'Peters'
@@ -60,9 +52,6 @@ def get_styles():
     key.fontSize = 8
     key.leading = 6.5
     key.leftIndent = -5
-    # https://www.fileformat.info/info/unicode/char/266d/fontsupport.htm
-    # Installed "DejaVu Sans" here: '/Users/jsundram/Library/Fonts/DejaVuSans.ttf'
-    # it's available here: https://dejavu-fonts.github.io/Download.html
     key.fontName = 'ArialUnicode'
     styles.add(key)
 
@@ -189,7 +178,7 @@ def get_cell_table(q, cell_size, styles):
     keytext = "%s%s%d/%d" % (Quartets._key(q), '&nbsp;'*2, q['key_number'], q['key_count'])
     minuet = Quartets._minuets(q)[0]
     # op, start, stop, weight, colour, cap, dashes, join
-    #LINEBELOW, LINEABOVE, LINEBEFORE and LINEAFTER
+    # op: LINEBELOW, LINEABOVE, LINEBEFORE and LINEAFTER
     # cap: 0 butt, 1 round, 2 square
     # join: 0 miter, 1 round, 2 bevel
     highlight = colors.Color(.5, .5, .5, .2)  # h
@@ -270,31 +259,19 @@ def get_lead_table(q, info, s, styles):
 
 
 def build_table(quartets, page, styles, events):
-    # Box Commands: GRID, BOX, OUTLINE, INNERGRID,
-    #   BOX and OUTLINE are equivalent,
-    #   GRID is the equivalent of applying both BOX and INNERGRID.
-    # Line Commands: LINEBELOW, LINEABOVE, LINEBEFORE, LINEAFTER, LINE and LINEAFTER.
     table_style = TableStyle([
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        # ("BOX", (0, 0), (-1, -1), 0.5, colors.black),
-        # ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
     ])
 
     # Create the table.
-    table_data = []
-    for row in range(page.rows):
-        row_cells = []
-        for col in range(page.columns):
-            row_cells.append(None)
-        table_data.append(row_cells)
+    table_data = [[None] * page.columns for _ in range(page.rows)]
 
     o42 = [q for q in quartets if q['opus'] == 42][0]
     o103 = [q for q in quartets if q['opus'] == 103][0]
     quartets = [q for q in quartets if q['opus'] > 2 and q['opus'] not in {42, 103}]
 
     prev = None
-    print(page)
     row, col = -1, 1
     for q in quartets:
         bg_color = Quartets._bgcolor(q)
@@ -306,9 +283,7 @@ def build_table(quartets, page, styles, events):
             table_data[row][0] = get_lead_table(q, opus_data, page.cell_size, styles)
             table_style.add('OUTLINE', (0, row), (0, row), .25, colors.black)
 
-        # print(q['ID'], row, col)
         table_data[row][col] = get_cell_table(q, page.cell_size, styles)
-        #table_style.add('BACKGROUND', (col, row), (col, row), bg_color)
         table_style.add('OUTLINE', (col, row), (col, row), .25, colors.black)
         col += 1
 
@@ -324,14 +299,8 @@ def build_table(quartets, page, styles, events):
     table_style.add('OUTLINE', (col, row), (col, row), .25, colors.black)
     row, col = 9, 6
     table_data[row][col] = get_cell_table(o103, page.cell_size, styles)
+    # Purposely omit the outline on 103, so that it only has 2 / 4 sides outlined:
     #table_style.add('OUTLINE', (col, row), (col, row), .25, colors.black)
-    """
-    row = 0
-    for col, q in enumerate(earlies):
-        bg_color = Quartets._bgcolor(q)
-        table_data[row][col] = get_cell_table(q, page.cell_size, styles)
-        table_style.add('BACKGROUND', (col, row), (col, row), bg_color)
-    """
 
     # Create the table and style it
     return Table(
@@ -445,7 +414,6 @@ class Pentagon(Flowable):
         table.drawOn(self.canv, -self.cell_width/2.0, -self.cell_height / 2.0)
 
 
-
 def build_earlies(quartets, page, styles, events):
     earlies = [q for q in quartets if q['opus'] <= 2]
     cell_width = (page.width  - 2 * page.margin - page.cell_size) / len(earlies)
@@ -465,6 +433,7 @@ def build_earlies(quartets, page, styles, events):
         # ('GRID', (0,0), (-1,-1), 1, colors.black)
     ]))
     return table
+
 
 def build_footer(page, styles):
     text = """*Due to the popularity of the Peters Edition, it was often said that there were 83 Haydn quartets. However, this includes 6 quartets in opus 3, not written by Haydn, opus 1#5, a transcription of symphony A, opus 2#3 and 2#5, which are actually sextets missing two horn parts, and counts each of the movements of The 7 Last Words (an arrangement of an orchestral piece) as its own quartet. It also omits Opus 1#0, sometimes known as Opus 0."""
