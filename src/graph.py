@@ -8,10 +8,10 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.lib.units import inch, cm
 
 from pdfimage import PdfImage
-import read as Quartets
+import read
 
 
-def create_graph_paper(pdf_path, clr=colors.grey):
+def create_graph_paper(pdf_path, clr):
     # Initialize the canvas
     c = canvas.Canvas(pdf_path, pagesize=letter)
     width, height = letter
@@ -60,15 +60,13 @@ def create_graph_paper(pdf_path, clr=colors.grey):
 @click.command()
 @click.option('-t', '--timeline-pdf', type=click.Path(exists=True), required=True, help="timeline pdf filepath")
 @click.option('-o', '--outfile', type=click.Path(writable=True), required=True, help="output filename")
-@click.option('-d', '--datadir', type=click.Path(exists=True), required=True, help="data directory")
 @click.option('-c', '--color-json', type=click.Path(exists=True), required=True, help="json file specifying colors")
-def main(timeline_pdf, outfile, datadir, color_json):
+def main(timeline_pdf, outfile, color_json):
     # Create and save the graph paper PDF
-    g = colors.Color(.25, .25, .25, 1)
-    # TODO: this is a hacky way to get a color to use once, maybe remove or pass in color directly?
-    _ = Quartets.get_data(data_dir=datadir, colorf=color_json)  # initialize quartets
-    bg_color = Quartets._bgcolor({'opus': 76})
-    h_color = colors.Whiter(bg_color, .75)  # colors.Whiter(g, .25)
+    # c = colors.Color(.25, .25, .25, 1)  # for light gray background and one less dependency.
+    color_dict = read.read_colors(color_json)
+    c = color_dict['lavender']['value']
+    h_color = colors.Whiter(c, .75)
     pdf = create_graph_paper(outfile, h_color)
 
     width, height = letter
@@ -78,7 +76,6 @@ def main(timeline_pdf, outfile, datadir, color_json):
         margin=attrdict(x=10, y=20),
     )
 
-    # Read output of timeline.py
     # Swap width and height since we are rotating
     timeline = PdfImage(timeline_pdf,
         #height=height-2*page.margin.y,
