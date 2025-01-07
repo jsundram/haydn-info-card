@@ -1,9 +1,10 @@
+import click
 import json
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import subprocess
-from argparse import Namespace as attrdict
+import os
 
+from argparse import Namespace as attrdict
 from datetime import datetime, timedelta
 
 import read
@@ -18,7 +19,7 @@ def parse_year(y):
 
     return datetime.strptime(str(y), '%Y')
 
-def get_data(filename='./timeline.json'):
+def get_data(filename):
     # hand-coded json taking from munging quartet-roulette data.
     # '../quartet-chooser/src/data/data.json'
     def tryint(s):
@@ -291,7 +292,11 @@ def make_plot(data, filename, opus_colors, colors, es):
     return filename
 
 
-def main():
+@click.command()
+@click.option('-o', '--outfile', type=click.Path(writable=True), required=True, help="output filename")
+@click.option('-c', '--color-json', type=click.Path(exists=True), required=True, help="json file specifying colors")
+@click.option('-d', '--datadir', type=click.Path(exists=True), required=True, help="data directory")
+def main(outfile, color_json, datadir):
     """
     styles
     plt.style.use('Solarize_Light2')
@@ -304,11 +309,10 @@ def main():
     """
     stylename = 'fivethirtyeight'
     plt.style.use(stylename)
-    data = get_data()
-    filename = 'timeline.pdf'
+    data = get_data(os.path.join(datadir, 'timeline.json'))
 
     # get colors
-    cmap = read.get_cmap('./colors/sashamaps.json')
+    cmap = read.get_cmap(color_json)
     cols = read.COLS  # get_cmap populates COLS via read.read_colors()
     to_hex = lambda cname: cols[cname]['value'].hexval().replace('0x', '#').upper()
     opus_colors = {opus: to_hex(cname) for (opus, cname) in cmap.items()}
@@ -319,10 +323,8 @@ def main():
     }
     es = list(map(to_hex, ['lavender', 'apricot', 'pink']))
 
-    make_plot(data, filename, opus_colors, composer_colors, es)
+    make_plot(data, outfile, opus_colors, composer_colors, es)
     plt.close()
-
-    subprocess.run(["open", filename])
 
 
 if __name__ == '__main__':

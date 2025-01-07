@@ -1,8 +1,8 @@
+import click
 import copy
 import glob
 import json
 import os
-import subprocess
 from math import cos, sin, pi, sqrt
 from datetime import datetime
 
@@ -485,7 +485,12 @@ def build_footer(page, styles):
     )
 
 
-def main(filename, colorfile=None):
+@click.command()
+@click.option('-o', '--outfile', type=click.Path(writable=True), required=True, help="output filename")
+@click.option('-a', '--annotations-pdf', type=click.Path(exists=True), required=True, help="annotations.pdf for overlay")
+@click.option('-c', '--color-json', type=click.Path(exists=True), required=True, help="json file specifying colors")
+@click.option('-d', '--datadir', type=click.Path(exists=True), required=True, help="data directory")
+def main(outfile, annotations_pdf, color_json, datadir):
     events = {
              1: {"year": 1758, "nickname": "Fürnberg", "notes":""},
              9: {"year": 1769, "nickname": "", "notes":""},
@@ -501,9 +506,7 @@ def main(filename, colorfile=None):
             77: {"year": 1799, "nickname": "Lobkowitz", "notes":""},
            103: {"year": 1803, "nickname": "Fries", "notes":""},
     }
-    if not colorfile:
-        colorfile = 'colors/Set3-11.json'
-    quartets = Quartets.get_data(colorf=colorfile, extend=False)
+    quartets = Quartets.get_data(data_dir=datadir, colorf=color_json, extend=False)
 
     expose_fonts()
 
@@ -524,7 +527,7 @@ def main(filename, colorfile=None):
                          (page.height - 2 * page.margin) / page.rows)
 
     # Create the PDF canvas
-    pdf = canvas.Canvas(filename, pagesize=pagesize)
+    pdf = canvas.Canvas(outfile, pagesize=pagesize)
     styles = get_styles()
 
     add_title(pdf, 'The 67.5* Haydn Quartets', 24, page, 'AppleChancery')
@@ -551,7 +554,7 @@ def main(filename, colorfile=None):
 
     # Show an Annotation to explain the table (output of annotate.py)
     s = page.cell_size*2.5
-    explainer = PdfImage('./annotate.pdf',
+    explainer = PdfImage(annotations_pdf,
         height=s,
         width=s,
         kind='proportional'
@@ -564,4 +567,4 @@ def main(filename, colorfile=None):
 
 
 if __name__ == '__main__':
-    main('table-portrait-test.pdf', './colors/sashamaps.json')
+    main()

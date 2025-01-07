@@ -1,5 +1,6 @@
-from argparse import Namespace as attrdict
+import click
 
+from argparse import Namespace as attrdict
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -56,14 +57,18 @@ def create_graph_paper(pdf_path, clr=colors.grey):
     return c
 
 
-def main():
+@click.command()
+@click.option('-t', '--timeline-pdf', type=click.Path(exists=True), required=True, help="timeline pdf filepath")
+@click.option('-o', '--outfile', type=click.Path(writable=True), required=True, help="output filename")
+@click.option('-d', '--datadir', type=click.Path(exists=True), required=True, help="data directory")
+def main(timeline_pdf, outfile, datadir):
     # Create and save the graph paper PDF
     g = colors.Color(.25, .25, .25, 1)
-    _ = Quartets.get_data()  # initialize quartets
+    # TODO: this is a hacky way to get a color to use once, maybe remove or pass in color directly?
+    _ = Quartets.get_data(data_dir=datadir)  # initialize quartets
     bg_color = Quartets._bgcolor({'opus': 76})
-    h_color = colors.Whiter(bg_color, .75)
-    #pdf = create_graph_paper("graph_paper.pdf", colors.Whiter(g, .25))
-    pdf = create_graph_paper("graph_paper.pdf", h_color)
+    h_color = colors.Whiter(bg_color, .75)  # colors.Whiter(g, .25)
+    pdf = create_graph_paper(outfile, h_color)
 
     width, height = letter
     page = attrdict(
@@ -74,7 +79,7 @@ def main():
 
     # Read output of timeline.py
     # Swap width and height since we are rotating
-    timeline = PdfImage('./timeline.pdf',
+    timeline = PdfImage(timeline_pdf,
         #height=height-2*page.margin.y,
         width=height - 2*page.margin.y,
         #width=width-2*page.margin.x,
@@ -85,19 +90,6 @@ def main():
 
     tiw, tih = timeline.wrapOn(pdf, page.width, page.height)
     timeline.drawOn(pdf, page.margin.x + tih, page.margin.y)
-
-
-    """
-    s = 3 * inch
-    explainer = PdfImage('./annotate.pdf',
-        height=s,
-        width=s,
-        kind='proportional'
-    )
-    ew, eh = explainer.wrapOn(pdf, page.width, page.height)
-    #explainer.drawOn(pdf, page.margin + page.cell_size*7 + 5, page.margin + 3*page.cell_size)
-    explainer.drawOn(pdf, page.width - page.margin.x - ew, page.margin.y + tiw - eh)
-    """
     pdf.save()
 
 

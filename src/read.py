@@ -77,10 +77,12 @@ def _key(q):
 def _minor(q):
     return q['key'][0].islower()
 
+
 def _minuets(q):
     """returns the quartet movements with minuets"""
     m = q['movements']
     return [i['mvmt'] for i in m if 'Menu' in i['tempo'] or 'Scherzo' in i['tempo']]
+
 
 def get_cmap(filename):
     """Returns a mapping of opus number to color name.
@@ -334,6 +336,7 @@ def _add_extras(quartets):
 
     return quartets
 
+
 def write_haydn_peters_ix(datafile='./../quartet-chooser/src/data/data.json', outfile='haydn_peters.json'):
     """
     reads data from quartet roulette and writes out an index.
@@ -362,7 +365,8 @@ def write_haydn_peters_ix(datafile='./../quartet-chooser/src/data/data.json', ou
 
 
 # more colors: https://sashamaps.net/docs/resources/20-colors/
-def get_data(quartet_file='quartets.json', peters='haydn_peters.json', movement_file='movements.json', colorf='colors/Set3-11.json', extend=True):
+def get_data(data_dir='../data', colorf='../colors/Set3-11.json', extend=True):
+    quartet_file = 'quartets.json'
     """#quartets.json sample entry
     {
         'ID': '076_2',
@@ -380,6 +384,7 @@ def get_data(quartet_file='quartets.json', peters='haydn_peters.json', movement_
         'nickname': ['Quinten / (Fifths)']
     }
     """
+    movement_file = 'movements.json'
     """# movements.json sample entry
     {
         "mode_confidence": 0.734,
@@ -432,6 +437,7 @@ def get_data(quartet_file='quartets.json', peters='haydn_peters.json', movement_
         "danceability": 0.43146
     },
     """
+    peters = 'haydn_peters.json'
 
 
     # this isn't used here; it's a bit gross to have the side effect of loading
@@ -439,16 +445,16 @@ def get_data(quartet_file='quartets.json', peters='haydn_peters.json', movement_
     global CMAP
     CMAP = get_cmap(colorf)
 
-    with open(peters) as f:
+    with open(os.path.join(data_dir, peters)) as f:
         p_ix = json.load(f)
 
-    with open(movement_file) as f:
+    with open(os.path.join(data_dir, movement_file)) as f:
         movements = defaultdict(list)
         qid = lambda m: m['ID'].split('m')[0]
         for m in json.load(f):
             movements[qid(m)].append(m)
 
-    with open(quartet_file) as f:
+    with open(os.path.join(data_dir, quartet_file)) as f:
         data = json.load(f)
         quartets = []
         # some nicknames are missing; others need shortening

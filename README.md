@@ -3,10 +3,10 @@
 ## To Generate the latest card:
 
 1. Make whatever edits need to be made.
-2. Run `uv run annotate.py` to generate "annotate.pdf", which is the legend/explainer for the card.
-3. Run `uv run table-portrait.py` for the front of the card, which generates "table-portrait-test.pdf". This depends on annotate.pdf
-4. Run `uv run timeline.py` which generates "timeline.pdf"
-5. Run `uv run graph.py` for the back of the card, which generates "graph_paper.pdf"
+2. Run `uv run src/annotate.py -o output/annotate.pdf` to generate "annotate.pdf", which is the legend/explainer for the card.
+3. Run `uv run src/table-portrait.py -o ./output/table-portrait-test.pdf -a ./output/annotate.pdf -c ./colors/sashamaps.json -d ./data` for the front of the card, which generates "table-portrait-test.pdf". 
+4. Run ` uv run src/timeline.py -o output/timeline.pdf -c ./colors/sashamaps.json -d ./data` which generates "timeline.pdf"
+5. Run `uv run src/graph.py -t output/timeline.pdf -o output/graph_paper.pdf -d ./data` for the back of the card, which generates "graph_paper.pdf"
 6. Open table-portrait-test.pdf in Preview.app
 7. In Preview, click "Show Thumbnails" 
 8. Drag graph_paper.pdf into the "Thumbnails" window
