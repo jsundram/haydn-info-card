@@ -491,22 +491,8 @@ def build_footer(page, styles):
 @click.option('-c', '--color-json', type=click.Path(exists=True), required=True, help="json file specifying colors")
 @click.option('-d', '--datadir', type=click.Path(exists=True), required=True, help="data directory")
 def main(outfile, annotations_pdf, color_json, datadir):
-    events = {
-             1: {"year": 1758, "nickname": "Fürnberg", "notes":""},
-             9: {"year": 1769, "nickname": "", "notes":""},
-            17: {"year": 1771, "nickname": "", "notes":""},
-            20: {"year": 1772, "nickname": "Sun", "notes":""},
-            33: {"year": 1781, "nickname": "Russian", "notes":""},
-            42: {"year": 1785, "nickname": "", "notes":""},
-            50: {"year": 1787, "nickname": "Prussian", "notes":""},
-            54: {"year": 1788, "nickname": "Tost I / II", "notes":""},
-            64: {"year": 1790, "nickname": "Tost III", "notes":""},
-            71: {"year": 1793, "nickname": "Apponyi", "notes":""},
-            76: {"year": 1797, "nickname": "Erdödy", "notes":""},
-            77: {"year": 1799, "nickname": "Lobkowitz", "notes":""},
-           103: {"year": 1803, "nickname": "Fries", "notes":""},
-    }
     quartets = Quartets.get_data(data_dir=datadir, colorf=color_json, extend=False)
+    events = Quartets.get_opera()
 
     expose_fonts()
 

@@ -363,6 +363,23 @@ def write_haydn_peters_ix(datafile='./../quartet-chooser/src/data/data.json', ou
     with open(outfile, 'w') as f:
         json.dump(peters, f, indent=4)
 
+def get_opera():
+    return {
+             1: {"year": 1758, "nickname": "Fürnberg", "notes":""},
+             9: {"year": 1769, "nickname": "", "notes":""},
+            17: {"year": 1771, "nickname": "", "notes":""},
+            20: {"year": 1772, "nickname": "Sun", "notes":""},
+            33: {"year": 1781, "nickname": "Russian", "notes":""},
+            42: {"year": 1785, "nickname": "", "notes":""},
+            50: {"year": 1787, "nickname": "Prussian", "notes":""},
+            54: {"year": 1788, "nickname": "Tost I / II", "notes":""},
+            64: {"year": 1790, "nickname": "Tost III", "notes":""},
+            71: {"year": 1793, "nickname": "Apponyi", "notes":""},
+            76: {"year": 1797, "nickname": "Erdödy", "notes":""},
+            77: {"year": 1799, "nickname": "Lobkowitz", "notes":""},
+           103: {"year": 1803, "nickname": "Fries", "notes":""},
+    }
+
 
 # more colors: https://sashamaps.net/docs/resources/20-colors/
 def get_data(data_dir='../data', colorf='../colors/Set3-11.json', extend=True):
