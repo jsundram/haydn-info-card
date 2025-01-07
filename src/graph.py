@@ -61,11 +61,12 @@ def create_graph_paper(pdf_path, clr=colors.grey):
 @click.option('-t', '--timeline-pdf', type=click.Path(exists=True), required=True, help="timeline pdf filepath")
 @click.option('-o', '--outfile', type=click.Path(writable=True), required=True, help="output filename")
 @click.option('-d', '--datadir', type=click.Path(exists=True), required=True, help="data directory")
-def main(timeline_pdf, outfile, datadir):
+@click.option('-c', '--color-json', type=click.Path(exists=True), required=True, help="json file specifying colors")
+def main(timeline_pdf, outfile, datadir, color_json):
     # Create and save the graph paper PDF
     g = colors.Color(.25, .25, .25, 1)
     # TODO: this is a hacky way to get a color to use once, maybe remove or pass in color directly?
-    _ = Quartets.get_data(data_dir=datadir)  # initialize quartets
+    _ = Quartets.get_data(data_dir=datadir, colorf=color_json)  # initialize quartets
     bg_color = Quartets._bgcolor({'opus': 76})
     h_color = colors.Whiter(bg_color, .75)  # colors.Whiter(g, .25)
     pdf = create_graph_paper(outfile, h_color)
