@@ -515,7 +515,7 @@ def main(outfile, annotations_pdf, color_json, datadir):
     y = (page.height - h - page.margin - page.table_fudge - page.title_fudge - page.last_fudge)
     table.drawOn(pdf, x, y)
 
-    # Show an Annotation to explain the table (output of annotate.py)
+    # Add an annotation to explain the table (output of annotation.py)
     s = page.cell_size*2.5
     explainer = PdfImage(annotations_pdf,
         height=s,
