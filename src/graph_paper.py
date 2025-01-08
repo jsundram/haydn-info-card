@@ -64,7 +64,7 @@ def get_highlight_color(color_dict, color_name):
         case 'lavender':
             c, l = color_dict[color_name]['value'], .75
         case 'grey':
-            c, l = color_dict[color_name]['value'], .25
+            c, l = color_dict[color_name]['value'], .5
         case _:
             l = .5
             try:
