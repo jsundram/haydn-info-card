@@ -4,7 +4,7 @@
 
 1. Make whatever edits need to be made.
 2. `run ./make_card.sh`
-3. This will create the file  `output/Haydn Info Card - Sundram - MM-DD-YYYY.pdf`
+3. This will create the file  `output/Haydn Info Card - Sundram - YYYY-MM-DD.pdf`
 
 
 ## Version History
