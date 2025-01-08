@@ -1,6 +1,8 @@
 import click
 
 from argparse import Namespace as attrdict
+from datetime import datetime
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -93,16 +95,21 @@ def main(timeline_pdf, outfile, color_json, grid_color):
 
     # Swap width and height since we are rotating
     timeline = PdfImage(timeline_pdf,
-        #height=height-2*page.margin.y,
         width=height - 2*page.margin.y,
-        #width=width-2*page.margin.x,
-        height=width-2*page.margin.x,
+        height=width - 2*page.margin.x,
         kind='proportional',
         rotation=270
     )
 
     tiw, tih = timeline.wrapOn(pdf, page.width, page.height)
     timeline.drawOn(pdf, page.margin.x + tih, page.margin.y)
+
+    # Add copyright / version info
+    pdf.setFont("Helvetica", 8)
+    pdf.setFillColor(colors.Whiter(colors.gray, .75))
+    pdf.drawString(page.margin.x + 15, page.height - 19, '© Jason Sundram, ' + datetime.now().strftime("%Y-%m-%d"))
+    # pdf.drawString(page.margin.x + 15, page.height - page.margin.y - tiw - 6, '© Jason Sundram, ' + datetime.now().strftime("%Y-%m-%d"))
+
     pdf.save()
 
 

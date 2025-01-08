@@ -149,20 +149,28 @@ def add_title(pdf, title, points, page, font="AppleChancery"):
     # center...
     title_width = pdf.stringWidth(title, font, points)
     title_x = (page.width - title_width) / 2
-    title_y = page.height - page.margin
+    title_y = page.height - page.margin - points
     pdf.drawString(title_x, title_y, title)  # Draw the title on the canvas
 
 
 def add_version(pdf, page):
-    # Draw vertical text for the current date
-    text_x = page.margin - .1*inch
-    text_y = page.height - 2*page.margin
+    """ # print version number / authorship info at the top of the card
     pdf.saveState()
-    pdf.translate(text_x, text_y)
-    pdf.rotate(90)
+    pdf.translate(page.margin - .1*inch, page.height - 2*page.margin + page.cell_size)
     pdf.setFont("Helvetica", 10)
-    pdf.setFillColor(colors.gray)
-    pdf.drawString(0, 0, '© ' + datetime.now().strftime("%Y-%m-%d"))
+    pdf.setFillColor(colors.Whiter(colors.gray, .75))
+    pdf.drawString(0, -00, '© Jason Sundram, ' + datetime.now().strftime("%Y-%m-%d"))
+    # pdf.drawString(0, -10, 'https://haydnenthusiasts.org/card')
+    pdf.restoreState()
+    """
+
+    # Add copyright / version info on the bottom right
+    pdf.saveState()
+    pdf.translate(page.width - 20, page.margin + 94)
+    pdf.rotate(270)
+    pdf.setFont("Helvetica", 8)
+    pdf.setFillColor(colors.Whiter(colors.gray, .75))
+    pdf.drawString(0, -00, '© Jason Sundram, ' + datetime.now().strftime("%Y-%m-%d"))
     pdf.restoreState()
 
 
