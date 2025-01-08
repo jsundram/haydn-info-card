@@ -19,6 +19,7 @@ def parse_year(y):
 
     return datetime.strptime(str(y), '%Y')
 
+
 def get_data(filename):
     # hand-coded json taking from munging quartet-roulette data.
     # '../quartet-chooser/src/data/data.json'
@@ -40,8 +41,8 @@ def get_data(filename):
             opus = tryint(name) if composer == 'Haydn' and 0 < size else 0
             data.append(attrdict(composer=composer, year=parse_year(year), size=size, name=name, ix=i, opus=opus))
         # print(json.dumps([d.__dict__ for d in data], indent=4))
-        # json-encoding/decoding time is better this way:https://stackoverflow.com/a/52838324/2683
-        print(json.dumps(data, indent=4, default=str))
+        # json-encoding/decoding time is better this way: https://stackoverflow.com/a/52838324/2683
+        # print(json.dumps(data, indent=4, default=str))
         """
         [
             "Namespace(composer='Haydn', year=datetime.datetime(1732, 1, 1, 0, 0), size=0, name='born', ix=1, opus=0)",
