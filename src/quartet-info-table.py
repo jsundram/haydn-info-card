@@ -126,12 +126,11 @@ def expose_fonts(directory='/System/Library/Fonts/'):
     ext = '*.ttf'
     files = glob.glob(directory + ext)
     files.extend(glob.glob(os.path.join(directory, 'Supplemental', ext)))
-    files.extend(glob.glob('/Users/jsundram/Librar/Fonts/' + ext))
+    files.extend(glob.glob(os.path.expanduser(f'~/Library/Fonts/{ext}')))
 
-    print("Adding .ttf fonts from %s . . ." % directory)
     added = set()
     for file in files:
-        # '/System/Library/Fonts/Supplemental/Comic Sans MS Bold.ttf',
+        # e.g. '/System/Library/Fonts/Supplemental/Comic Sans MS Bold.ttf',
         base, ext = os.path.splitext(os.path.basename(file))
         name = base.replace(' ', '')
         try:
