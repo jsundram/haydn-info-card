@@ -1,10 +1,14 @@
 # Haydn Info Card
 
+Find out more about this card [here](https://haydnenthusiasts.org/haydn_card.html)
+
 ## To Generate the latest card:
 
 1. Make whatever edits need to be made.
 2. `run ./make_card.sh`
 3. This will create the file  `output/Haydn Info Card - Sundram - YYYY-MM-DD.pdf`
+4. You may wish to update haydnenthusiasts.org, which will require a git fetch / git merge once the new file is committed.
+5. You may also wish to update the screenshots which are included on haydnethusiasts.org; modify `./make_card.sh` to uncomment out the lines that generate those images.
 
 
 ## Version History

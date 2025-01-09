@@ -7,9 +7,13 @@ uv run src/annotation.py -o ${OUTDIR}/annotation.pdf
 
 # 2. Create the table (front of card) and overlay the explainer.
 uv run src/quartet-info-table.py -o ${OUTDIR}/front.pdf -a ${OUTDIR}/annotation.pdf -c ./colors/sashamaps.json -d ./data
+# Create a version of the front suitable for inclusion on haydnenthusiasts.org (requires imagemagick)
+# magick -density 192 -depth 8 -quality 100 -alpha remove ${OUTDIR}/front.pdf ${OUTDIR}/timeline.png
 
 # 3. Generate the timeline.
 uv run src/timeline.py -o ${OUTDIR}/timeline.pdf -c ./colors/sashamaps.json -d ./data
+# Create a version of the timeline suitable for inclusion on haydnenthusiasts.org (requires imagemagick)
+# magick -density 192 -depth 8 -quality 100 -alpha remove ${OUTDIR}/timeline.pdf ${OUTDIR}/timeline.png
 
 # 4. Generate the graph paper and overlay the timeline on it (-g lavender for susie).
 uv run src/graph_paper.py -t ${OUTDIR}/timeline.pdf -c ./colors/sashamaps.json -o ${OUTDIR}/back.pdf -g grey
