@@ -6,6 +6,8 @@ import os
 
 from argparse import Namespace as attrdict
 from datetime import datetime, timedelta
+from dateutil.rrule import rrule, YEARLY
+from matplotlib.dates import date2num
 
 import read
 
@@ -91,9 +93,8 @@ def make_plot(data, filename, opus_colors, colors, es):
     # https://matplotlib.org/stable/gallery/text_labels_and_annotations/text_alignment.html
 
     # x-axis ticks
-    for i, date in enumerate(mdates.drange(parse_year('1758'), parse_year('1809'), timedelta(days=365))):
-        ax.plot(date, 1, marker=3, markersize=5, color='k', alpha=.25, markeredgewidth=1)
-        # ax.plot(d.year, l, marker=marker, markersize=sz, color=clr, alpha=1, mew=w)
+    for date in rrule(freq=YEARLY, dtstart=datetime(1758, 1, 1), until=datetime(1809, 1, 1)):
+        ax.plot(date2num(date), 1, marker=3, markersize=5, color='k', alpha=.25, markeredgewidth=1)
 
     for d in data:
         if d.size == 0: # birth / death
