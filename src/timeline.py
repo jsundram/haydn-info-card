@@ -94,7 +94,8 @@ def make_plot(data, filename, opus_colors, colors, es):
 
     # x-axis ticks
     for date in rrule(freq=YEARLY, dtstart=datetime(1758, 1, 1), until=datetime(1809, 1, 1)):
-        ax.plot(date2num(date), 1, marker=3, markersize=5, color='k', alpha=.25, markeredgewidth=1)
+        if date.year % 5 != 0:  # avoid overplotting the major_locator lines.
+            ax.plot(date2num(date), 1, marker=3, markersize=5, color='k', alpha=.25, markeredgewidth=1)
 
     for d in data:
         if d.size == 0: # birth / death
