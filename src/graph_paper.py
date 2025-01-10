@@ -93,16 +93,25 @@ def main(timeline_pdf, outfile, color_json, grid_color):
         margin=attrdict(x=10, y=20),
     )
 
-    # Swap width and height since we are rotating
-    timeline = PdfImage(timeline_pdf,
-        width=height - 2*page.margin.y,
-        height=width - 2*page.margin.x,
-        kind='proportional',
-        rotation=270
-    )
+    if timeline_pdf.endswith('_vertical.pdf'):
+        timeline = PdfImage(timeline_pdf,
+            width=width - 2*page.margin.x,
+            height=height - 2*page.margin.y,
+            kind='proportional',
+        )
+        timeline.wrapOn(pdf, page.width, page.height)
+        timeline.drawOn(pdf, page.margin.x, page.margin.y)
+    else:
+        # Swap width and height since we need to rotate
+        timeline = PdfImage(timeline_pdf,
+            width=height - 2*page.margin.y,
+            height=width - 2*page.margin.x,
+            kind='proportional',
+            rotation=270
+        )
 
-    tiw, tih = timeline.wrapOn(pdf, page.width, page.height)
-    timeline.drawOn(pdf, page.margin.x + tih, page.margin.y)
+        tiw, tih = timeline.wrapOn(pdf, page.width, page.height)
+        timeline.drawOn(pdf, page.margin.x + tih, page.margin.y)
 
     # Add copyright / version info
     pdf.setFont("Helvetica", 8)

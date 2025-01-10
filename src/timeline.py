@@ -137,6 +137,8 @@ def make_plot(data, filename, opus_colors, colors, es):
                 ax.annotate(d.year.year, xytext=(0, 6), ha='center', va='bottom', **defaults)
         else:
             d.name = d.name.replace('-', '–') # en-dash, not hyphen. IYKYK.
+            if d.name == '54/55':
+                d.name = '54/5'  # abbreviate to fit
             defaults.update(text=d.name)
             if d.ix == 3: # Earlies
                 ax.annotate(xytext=(-5, sz+8), ha='left', va='top', **defaults)

@@ -15,8 +15,12 @@ uv run src/timeline.py -o ${OUTDIR}/timeline.pdf -c ./colors/sashamaps.json -d .
 # Create a version of the timeline suitable for inclusion on haydnenthusiasts.org (requires imagemagick)
 # magick -density 192 -depth 8 -quality 100 -alpha remove ${OUTDIR}/timeline.pdf ${OUTDIR}/timeline.png
 
+uv run src/timeline_vertical.py -o ${OUTDIR}/timeline_vertical.pdf -c ./colors/sashamaps.json -d ./data
+#magick -density 192 -depth 8 -quality 100 ${OUTDIR}/timeline_vertical.pdf ${OUTDIR}/timeline_vertical.png
+
 # 4. Generate the graph paper and overlay the timeline on it (-g lavender for susie).
-uv run src/graph_paper.py -t ${OUTDIR}/timeline.pdf -c ./colors/sashamaps.json -o ${OUTDIR}/back.pdf -g grey
+# uv run src/graph_paper.py -t ${OUTDIR}/timeline.pdf -c ./colors/sashamaps.json -o ${OUTDIR}/back.pdf -g grey
+uv run src/graph_paper.py -t ${OUTDIR}/timeline_vertical.pdf -c ./colors/sashamaps.json -o ${OUTDIR}/back.pdf -g grey
 
 # 5. Merge the table (front of card) and the graph paper (back of card).
 uv run src/merge.py -f ${OUTDIR}/front.pdf -b ${OUTDIR}/back.pdf -o ${OUTDIR}/merged.pdf
@@ -27,5 +31,6 @@ mv ${OUTDIR}/merged.pdf ${OUTDIR}/Haydn\ Info\ Card\ -\ Sundram\ -\ $(date +%Y-%
 # 7. Cleanup
 rm ${OUTDIR}/annotation.pdf
 rm ${OUTDIR}/timeline.pdf
+rm ${OUTDIR}/timeline_vertical.pdf
 rm ${OUTDIR}/front.pdf
 rm ${OUTDIR}/back.pdf
