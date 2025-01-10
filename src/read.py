@@ -201,13 +201,14 @@ def get_cmap(filename):
         raise Exception("Insufficient colors provided! Need %d, got %d" % (
             len(defaults), len(COLS)))
     elif len(defaults) < len(COLS):
-        print("Unused colors: %s" % (set(COLS.keys()) - set(mapping.values())))
+        pass
+        # print("Unused colors: %s" % (set(COLS.keys()) - set(mapping.values())))
 
     for (k, v) in mapping.items():
         if v not in COLS:
             raise Exception("CMAP out of date! edit read.py:get_cmap()")
 
-    print("Mapping for %s is: \n%s\n" % (name, json.dumps(mapping, indent=4)))
+    # print("Mapping for %s is: \n%s\n" % (name, json.dumps(mapping, indent=4)))
 
     return mapping
 
@@ -269,7 +270,6 @@ def read_colors(filename='Set3-11.json'):
         return colors.Color(channel(r), channel(g), channel(b), int(a))
 
     cvalues = [parse_color(c['value']) for c in cset['colors']]
-    print("Read %d colors from %s" % (len(cvalues), filename))
 
     lightness = lambda c: colors.color2bw(c).red
     cols = {}
@@ -301,7 +301,6 @@ def read_colors(filename='Set3-11.json'):
 
         cols[col['name']] = col
 
-    print("returning %d colors" % (len(cols)))
     return cols
 
 
