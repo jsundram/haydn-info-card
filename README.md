@@ -19,3 +19,4 @@ Find out more about this card [here](https://haydnenthusiasts.org/haydn_card.htm
 * 2025-01-02 -- fix a small overlap between the cell anatomy graphic and the table borders.
 * 2025-01-07 -- move title down, add copyright/version info to both sides of card. Gray Graph Paper.
 * 2025-01-10 -- add a new vertical timeline to the back of the card.
+* 2025-05-08 -- use the more common "Graveyard Largo" nickname for opus 76#5.
