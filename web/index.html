@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    Interactive Haydn quartet info card. Modeled on the Periodic Table of
+    Boccherini String Quartets (https://github.com/jsundram/quartets.boccherini.org).
+
+    Data: opera.json, generated from the printed-card pipeline by
+          `uv run src/make_web_data.py -o web/opera.json`.
+
+    DARK MODE follows the system preference automatically. To force it for
+    testing: document.documentElement.classList.add('dark-mode')
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table of Haydn String Quartets</title>
+    <script src="d3.v7.min.js"></script>
+
+    <style>
+        :root {
+            /* === DYNAMIC SIZING SYSTEM === */
+            --card-height: clamp(100px, 12vw, 140px);
+            --card-gap: clamp(6px, 0.8vw, 10px);
+            --opus-label-width: clamp(85px, 8vw, 95px);
+            --top-section-height: clamp(14px, 1.7vw, 20px);
+            --nickname-height: clamp(10px, 1.3vw, 15px);
+            --bottom-section-height: clamp(14px, 1.7vw, 20px);
+
+            /* Movement bars (widths are computed per-movement from measures) */
+            --mvmt-line-height: 10px;
+            --mvmt-bar-color: #444444;   /* regular movement */
+            --mvmt-bar-minuet: #EEEEEE;  /* minuet / scherzo movement */
+            --mvmt-bar-spotify: #1DB954; /* hover, when a Spotify track exists */
+
+            --middle-section-height: calc(
+                var(--card-height)
+                - var(--top-section-height)
+                - var(--nickname-height)
+                - var(--bottom-section-height)
+            );
+
+            --top-font-size: 0.8em;
+            --middle-font-size: 2.8em;
+            --bottom-font-size: 0.7em;
+
+            /* === COLOR SYSTEM (LIGHT MODE DEFAULT) === */
+            --bg-body: #f5f5f5;
+            --bg-card: white;
+            --bg-tooltip: rgba(0, 0, 0, 0.9);
+            --bg-mode-bar-major: transparent;
+            --bg-mode-bar-minor: #555555;  /* neutral heavy gray (doesn't clash with opus palette) */
+
+            --text-primary: #222;
+            --text-secondary: #333;
+            --text-tertiary: #444;
+            --text-muted: #666;
+            --text-light: #777;
+            --text-lighter: #888;
+            --text-lightest: #999;
+            --text-link: #2196F3;
+            --text-link-hover: #1976D2;
+            --text-on-tooltip: white;
+
+            --text-hob-major: #444;
+            --text-num-major: #888;
+            --text-hob-minor: white;
+            --text-num-minor: rgba(255, 255, 255, 0.85);
+
+            --border-card: #ddd;
+            --border-card-hover: #888;
+            --border-card-active: #333;
+
+            --shadow-card: rgba(0, 0, 0, 0.1);
+            --shadow-card-hover: rgba(0, 0, 0, 0.2);
+        }
+
+        /* === DARK MODE COLORS === */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #1a1a1a;
+                --bg-card: #2d2d2d;
+                --bg-tooltip: rgba(240, 240, 240, 0.95);
+
+                --text-primary: #f0f0f0;
+                --text-secondary: #e0e0e0;
+                --text-tertiary: #d0d0d0;
+                --text-muted: #b0b0b0;
+                --text-light: #999;
+                --text-lighter: #888;
+                --text-lightest: #707070;
+                --text-link: #64B5F6;
+                --text-link-hover: #90CAF9;
+                --text-on-tooltip: #222;
+
+                --text-hob-major: #d0d0d0;
+                --text-num-major: #999;
+
+                /* minor bar goes light in dark mode, with dark text */
+                --bg-mode-bar-minor: #c4c4c4;
+                --text-hob-minor: #1a1a1a;
+                --text-num-minor: rgba(0, 0, 0, 0.7);
+
+                --border-card: #555;
+                --border-card-hover: #888;
+                --border-card-active: #aaa;
+
+                --shadow-card: rgba(0, 0, 0, 0.3);
+                --shadow-card-hover: rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        /* === EXPLICIT DARK MODE CLASS (FOR TESTING) === */
+        .dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --bg-tooltip: rgba(240, 240, 240, 0.95);
+            --text-primary: #f0f0f0;
+            --text-secondary: #e0e0e0;
+            --text-tertiary: #d0d0d0;
+            --text-muted: #b0b0b0;
+            --text-light: #999;
+            --text-lighter: #888;
+            --text-lightest: #707070;
+            --text-link: #64B5F6;
+            --text-link-hover: #90CAF9;
+            --text-on-tooltip: #222;
+            --text-hob-major: #d0d0d0;
+            --text-num-major: #999;
+            --bg-mode-bar-minor: #c4c4c4;
+            --text-hob-minor: #1a1a1a;
+            --text-num-minor: rgba(0, 0, 0, 0.7);
+            --border-card: #555;
+            --border-card-hover: #888;
+            --border-card-active: #aaa;
+            --shadow-card: rgba(0, 0, 0, 0.3);
+            --shadow-card-hover: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-body);
+            margin: 20px;
+            padding: 0;
+        }
+
+        .container {
+            width: fit-content;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .header-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            container-type: inline-size;
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 4.0cqw;
+            white-space: nowrap;
+        }
+
+        .subtitle {
+            margin: 0 0 12px 0;
+            text-align: right;
+            color: var(--text-muted);
+            font-size: clamp(0.75em, 0.85vw, 0.9em);
+            font-style: italic;
+        }
+
+        .subtitle a { color: var(--text-link); text-decoration: none; }
+        .subtitle a:hover { text-decoration: underline; }
+
+        /* Footnote on the revised quartet count. Width matches the table so it
+           wraps the same on desktop and the centered mobile layout. */
+        .footer {
+            width: calc(var(--opus-label-width) + 6 * var(--card-height) + 6 * var(--card-gap));
+            margin: 18px 0 0 0;
+            font-size: clamp(0.62em, 0.72vw, 0.74em);
+            line-height: 1.45;
+            color: var(--text-light);
+            text-align: justify;
+        }
+        .footer i { font-style: italic; }
+
+        /* === LEGEND === */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px 18px;
+            margin: 0 0 22px 0;
+            font-size: clamp(0.6em, 0.7vw, 0.72em);
+            color: var(--text-muted);
+        }
+        .legend .item { display: inline-flex; align-items: center; gap: 5px; }
+        .legend .swatch {
+            display: inline-block;
+            width: 22px; height: 12px;
+            border-radius: 2px;
+            border: 1px solid var(--border-card);
+        }
+        .legend .swatch.minor { background: var(--bg-mode-bar-minor); border-color: transparent; }
+        .legend .swatch.minuet { background: var(--mvmt-bar-minuet); }
+        .legend .swatch.movement { background: var(--mvmt-bar-color); }
+
+        .opus-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        /* === OPUS LABEL SECTION === */
+        .opus-label {
+            width: var(--opus-label-width);
+            height: var(--card-height);
+            padding: clamp(1px, 0.2vw, 2px) clamp(16px, 2.2vw, 30px) 0 clamp(4px, 0.6vw, 8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            text-align: right;
+            position: relative;
+            border-radius: 4px;
+            /* Per-opus "periodic table" color, as a linear fade toward the cards.
+               --opus-color is set inline per opus; --splash scales it for dark mode. */
+            --splash: 42%;
+            background: linear-gradient(to right,
+                transparent 0%,
+                color-mix(in srgb, var(--opus-color, transparent) var(--splash), transparent) 100%);
+        }
+        @media (prefers-color-scheme: dark) { .opus-label { --splash: 34%; } }
+        .dark-mode .opus-label { --splash: 34%; }
+
+        /* TOP: year + age, aligns with mode bar */
+        .opus-label .year-age {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: var(--top-section-height);
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .opus-label .year {
+            font-size: var(--top-font-size);
+            font-weight: 700;
+            color: var(--text-tertiary);
+            line-height: 1;
+        }
+        .opus-label .age {
+            font-size: calc(var(--top-font-size) * 0.85);
+            font-weight: 400;
+            color: var(--text-light);
+            line-height: 1;
+        }
+
+        /* MIDDLE: opus number, aligns with key section */
+        .opus-label .opus-number {
+            font-size: var(--middle-font-size);
+            font-weight: 900;
+            color: var(--text-primary);
+            line-height: 0.92;
+            letter-spacing: -0.03em;
+            height: var(--middle-section-height);
+            margin-bottom: var(--nickname-height);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;     /* right-align "Opus" + number into a neat column */
+            justify-content: center;
+        }
+        /* "Opus" sized and placed independently of the number (rem, not number-em),
+           so it aligns identically on every label including the compact ones. */
+        .opus-label .opus-prefix {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-light);
+            letter-spacing: 0.03em;
+            line-height: 1;
+            margin-bottom: 1px;
+        }
+        /* Wide labels ("103", "54/55") use a smaller number; the box keeps its width. */
+        .opus-label .opus-number.compact { font-size: calc(var(--middle-font-size) * 0.62); }
+
+        /* BOTTOM: opus nickname / byname, aligns with movement bar */
+        .opus-label .opus-byname {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            height: var(--bottom-section-height);
+            font-size: var(--bottom-font-size);
+            font-weight: 600;
+            font-style: italic;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .quartets-container {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: var(--card-gap);
+            margin-left: var(--card-gap);
+        }
+
+        .quartet-card {
+            width: var(--card-height);
+            height: var(--card-height);
+            background: var(--bg-card);
+            border: 2px solid var(--border-card);
+            border-radius: 4px;
+            padding: 0;
+            box-shadow: 2px 2px 5px var(--shadow-card);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .quartet-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 3px 3px 10px var(--shadow-card-hover);
+            border-color: var(--border-card-hover);
+        }
+
+        /* Empty grid column where a quartet is absent (e.g. 2#3, 2#5) */
+        .quartet-blank {
+            width: var(--card-height);
+            height: var(--card-height);
+            flex-shrink: 0;
+        }
+
+        .mode-bar {
+            height: var(--top-section-height);
+            width: 100%;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8px;
+            box-sizing: border-box;
+        }
+        .mode-bar.major { background: var(--bg-mode-bar-major); }
+        .mode-bar.minor { background: var(--bg-mode-bar-minor); }
+
+        .card-content {
+            padding: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .mode-bar.major .quartet-number { color: var(--text-num-major); }
+        .mode-bar.major .hob-number { color: var(--text-hob-major); }
+        .mode-bar.minor .quartet-number { color: var(--text-num-minor); }
+        .mode-bar.minor .hob-number { color: var(--text-hob-minor); }
+        .mode-bar .quartet-number {
+            font-size: var(--top-font-size); font-weight: 600; line-height: 1;
+        }
+        .mode-bar .hob-number {
+            font-size: var(--top-font-size); font-weight: 700; line-height: 1;
+        }
+
+        /* Key section - aligns with opus number */
+        .key-section {
+            height: var(--middle-section-height);
+            margin-bottom: var(--nickname-height);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 8px;
+        }
+        .key-signature {
+            text-align: center;
+            font-size: calc(var(--middle-font-size) * 0.64);
+            font-weight: bold;
+            color: var(--text-primary);
+            line-height: 1;
+            margin: 0;
+        }
+        .key-mode {
+            text-align: center;
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin: 2px 0 0 0;
+            line-height: 1;
+        }
+        /* Bottom-corner tags, sitting just above the movement bars.
+           Left: position within key ("2/4"). Right: Peters volume (I–IV). */
+        .card-corner {
+            position: absolute;
+            bottom: calc(var(--bottom-section-height) + 1px);
+            font-size: 0.62em;
+            line-height: 1;
+            color: var(--text-lighter);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .card-corner.key-pos { left: 5px; }
+        .card-corner.peters-vol { right: 5px; font-weight: 600; letter-spacing: 0.04em; }
+
+        /* Key signature accidentals - vertical bar on left edge */
+        .key-accidentals {
+            position: absolute;
+            left: 3px;
+            top: var(--top-section-height);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: calc(var(--middle-section-height) / 5);
+            line-height: 1.1;
+            color: var(--text-lightest);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .key-accidentals span { display: block; }
+
+        .nickname {
+            position: absolute;
+            top: calc(var(--top-section-height) + 2px);
+            left: 0;
+            right: 0;
+            padding: 0 5px;
+            font-size: 0.78em;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .movements-count {
+            text-align: center;
+            font-size: var(--bottom-font-size);
+            height: var(--bottom-section-height);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;  /* bars share a common left origin */
+            padding: 0 4px;
+            box-sizing: border-box;
+            margin: 0;
+            border-radius: 0;
+            font-weight: 500;
+            line-height: 1;
+        }
+        .movements-count .mvmt-lines-svg { display: block; height: var(--mvmt-line-height); }
+        /* Badge tinted with this quartet's opus color (matches the label splash) */
+        .movements-count { background-color: var(--opus-color, #B0BEC5); }
+        /* Leading movements missing (Op. 103): center the bars in the badge */
+        .movements-count.centered { justify-content: center; }
+
+        .tooltip {
+            position: absolute;
+            background: var(--bg-tooltip);
+            color: var(--text-on-tooltip);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 300px;
+            line-height: 1.4;
+        }
+        .tooltip .mvmt-link { color: var(--mvmt-bar-spotify); text-decoration: none; }
+        .tooltip .mvmt-link:hover { text-decoration: underline; }
+
+        /* === PRINT STYLES ===
+         * For best results: Cmd/Ctrl+P, enable "Background graphics",
+         * set margins to minimum.
+         */
+        @media print {
+            @page {
+                margin: 0;
+                margin-top: 0.25in;
+                size: letter portrait;
+            }
+            :root {
+                --card-height: 140px;
+                --top-section-height: 20px;
+                --nickname-height: 15px;
+                --bottom-section-height: 20px;
+                --bg-body: white;
+            }
+            body { font-size: 9pt; background: var(--bg-body); zoom: 0.73; }
+            h1 { font-size: 3.2em !important; max-width: 100%; }
+            .subtitle { font-size: 1.3em !important; }
+            .legend { font-size: 0.9em !important; }
+            .opus-row { page-break-inside: avoid; break-inside: avoid; }
+            .opus-label { width: 95px; box-shadow: none !important; }
+            .quartet-card { box-shadow: none !important; border: 1px solid #999; }
+            .tooltip { display: none !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        @media print and (prefers-color-scheme: dark) {
+            :root { --bg-body: #1a1a1a; }
+        }
+
+        /* === MOBILE RESPONSIVE === */
+        @media (hover: none) and (pointer: coarse) and (max-width: 800px) {
+            :root {
+                --card-height: 140px;
+                --card-gap: 10px;
+                --opus-label-width: 95px;
+                --top-section-height: 20px;
+                --nickname-height: 15px;
+                --bottom-section-height: 20px;
+            }
+            body {
+                margin: 0;
+                transform: scale(0.35);
+                transform-origin: 0 0;
+                width: calc(100% / 0.35);
+            }
+            .container { width: auto; align-items: center; }
+            .header-group { container-type: normal; }
+            h1 { font-size: 2.5em; }
+            .legend { font-size: 1em; }
+            .movements-count, .opus-label .opus-byname { white-space: nowrap; overflow: hidden; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-group">
+            <h1>Joseph Haydn (1732–1809) &mdash; The 68<sup>*</sup> String Quartets</h1>
+            <p class="subtitle">see also <a href="https://quartetroulette.com/Haydn/" target="_blank" rel="noopener noreferrer">Quartet Roulette</a> &middot; <a href="https://haydnenthusiasts.org/haydn_card.html" target="_blank" rel="noopener noreferrer">about this card</a></p>
+            <div class="legend">
+                <span class="item"><span class="swatch minor"></span> minor key (gray bar)</span>
+                <span class="item">accidentals on left edge</span>
+                <span class="item">Hob. = Hoboken III № &middot; #n = № in opus</span>
+                <span class="item">bar width &prop; movement length (measures)</span>
+                <span class="item"><span class="swatch minuet"></span> minuet/scherzo movement</span>
+                <span class="item">click a bar to play on Spotify &#9654;</span>
+            </div>
+        </div>
+        <div id="visualization"></div>
+        <p class="footer">* The traditional count of 83 quartets has been revised by the collected edition <i>Joseph Haydn: Werke</i>, which removes Opus 1 №5 (Symphony &lsquo;A&rsquo;, Hob. I:107), Opus 2 №3 and №5 (sextets, Hob. II:21&ndash;22), the six quartets of Opus 3 (spurious &mdash; probably by Romanus Hoffstetter, 1742&ndash;1815), and the individual movements of Haydn&rsquo;s arrangement of <i>The Seven Last Words</i>. Opus 1 №0 (&lsquo;Opus 0&rsquo;), rescued from Hob. II:6, is included here although absent from Peters. The early quartets were written for Baron Fürnberg; their dates are uncertain. Opus 103 was left unfinished, surviving as only two movements.</p>
+    </div>
+
+    <script>
+        const HAYDN_BIRTH_YEAR = 1732;
+
+        // Normally fetch opera.json. If a build/screenshot step has inlined the
+        // data as window.OPERA_DATA, use that (lets the page render from a
+        // file:// URL with no fetch — see shot.sh).
+        const dataPromise = window.OPERA_DATA
+            ? Promise.resolve(window.OPERA_DATA)
+            : d3.json('opera.json');
+        dataPromise.then(operaData => {
+            // Counter helper
+            const count = l => l.reduce((d, k) => { d[k] = (d[k] || 0) + 1; return d; }, {});
+
+            // Circle of fifths: key name -> {count, sign}
+            // hand-coded from https://en.wikipedia.org/wiki/Circle_of_fifths
+            const c5 = new Map(Object.entries({
+                "C major": {count: 0, sign: ""},   "A minor": {count: 0, sign: ""},
+                "G major": {count: 1, sign: "♯"},  "E minor": {count: 1, sign: "♯"},
+                "D major": {count: 2, sign: "♯"},  "B minor": {count: 2, sign: "♯"},
+                "A major": {count: 3, sign: "♯"},  "F-sharp minor": {count: 3, sign: "♯"},
+                "E major": {count: 4, sign: "♯"},  "C-sharp minor": {count: 4, sign: "♯"},
+                "B major": {count: 5, sign: "♯"},  "G-sharp minor": {count: 5, sign: "♯"},
+                "F-sharp major": {count: 6, sign: "♯"}, "D-sharp minor": {count: 6, sign: "♯"},
+                "C-sharp major": {count: 7, sign: "♯"},
+                "F major": {count: 1, sign: "♭"},  "D minor": {count: 1, sign: "♭"},
+                "B-flat major": {count: 2, sign: "♭"}, "G minor": {count: 2, sign: "♭"},
+                "E-flat major": {count: 3, sign: "♭"}, "C minor": {count: 3, sign: "♭"},
+                "A-flat major": {count: 4, sign: "♭"}, "F minor": {count: 4, sign: "♭"},
+                "D-flat major": {count: 5, sign: "♭"}, "B-flat minor": {count: 5, sign: "♭"},
+                "G-flat major": {count: 6, sign: "♭"}, "E-flat minor": {count: 6, sign: "♭"},
+                "C-flat major": {count: 7, sign: "♭"},
+            }));
+
+            const keyName = q => `${q.key} ${q.major ? 'major' : 'minor'}`;
+            const isMinuet = m => m.includes('Menu') || m.includes('Scherz');
+            const PETERS = ['', 'I', 'II', 'III', 'IV'];
+            const ordinal = n => {
+                const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+                return n + (s[(v - 20) % 10] || s[v] || s[0]);
+            };
+
+            window.operaData = operaData;
+
+            const container = d3.select('#visualization');
+            const tooltip = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            let activeCard = null;
+
+            const getBorderColor = () => getComputedStyle(document.documentElement).getPropertyValue('--border-card').trim();
+            const getActiveBorderColor = () => getComputedStyle(document.documentElement).getPropertyValue('--border-card-active').trim();
+
+            if (isTouchDevice) {
+                tooltip.style('pointer-events', 'auto');
+                tooltip.on('click', e => e.stopPropagation());
+                d3.select('body').on('click', function(event) {
+                    if (!event.target.closest('.quartet-card') && !event.target.closest('.tooltip')) {
+                        tooltip.style('opacity', 0);
+                        d3.selectAll('.quartet-card').style('border-color', getBorderColor());
+                        activeCard = null;
+                    }
+                });
+            }
+
+            // === OPUS LABEL (left side of a row) ===
+            function renderOpusLabel(parent, opus) {
+                const label = parent.append('div').attr('class', 'opus-label');
+                if (opus.color) label.style('--opus-color', opus.color);
+
+                const yearAge = label.append('div').attr('class', 'year-age');
+                yearAge.append('span').attr('class', 'year').text(opus.year);
+                yearAge.append('span').attr('class', 'age').text(`(${opus.year - HAYDN_BIRTH_YEAR})`);
+
+                const num = label.append('div').attr('class', 'opus-number');
+                num.append('span').attr('class', 'opus-prefix').text('Opus');
+                num.append('span').text(opus.opus);
+                // Merged labels ("54/55") shrink to fit the unchanged label box.
+                // wide labels ("103", "54/55") shrink to fit the box with its margin
+                if (String(opus.opus).length >= 3) num.classed('compact', true);
+
+                label.append('div').attr('class', 'opus-byname').text(opus.nickname || '');
+                return label;
+            }
+
+            // === QUARTET CARD ===
+            function renderQuartetCard(parent, opus, quartet) {
+                const showTooltip = function(event) {
+                    if (activeCard && activeCard !== this) {
+                        d3.select(activeCard).style('border-color', getBorderColor());
+                    }
+                    activeCard = this;
+                    d3.select(this).style('border-color', getActiveBorderColor());
+
+                    const totalMeasures = quartet.measures.reduce((a, b) => a + b, 0);
+                    const tracks = quartet.tracks || [];
+                    const nums = quartet.mvmtNums || [];
+                    const movements = quartet.mvmts.map((m, i) => {
+                        const label = `${nums[i] || i + 1}. ${m} <span style="opacity:.6">(${quartet.measures[i]} mm.)</span>`;
+                        return tracks[i]
+                            ? `<a href="${tracks[i]}" target="_blank" rel="noopener noreferrer" class="mvmt-link">${label}</a>`
+                            : label;
+                    }).join('<br>');
+                    const num = quartet.number != null ? ` #${quartet.number}` : '';
+                    const hob = quartet.hoboken ? ` (Hob. ${quartet.hoboken})` : '';
+                    const opusNo = quartet.opus != null ? quartet.opus : opus.opus;
+
+                    let html = `<strong>Opus ${opusNo}${num} in ${keyName(quartet)}</strong>${hob}<br>`;
+                    if (quartet.nickname) html += `<em>"${quartet.nickname}"</em><br>`;
+                    const bits = [];
+                    if (quartet.peters) bits.push(`Peters Vol. ${PETERS[quartet.peters]}`);
+                    if (quartet.key_number && quartet.key_count) {
+                        bits.push(`${ordinal(quartet.key_number)} of ${quartet.key_count} in ${keyName(quartet)}`);
+                    }
+                    if (bits.length) html += `${bits.join(' · ')}<br>`;
+                    html += `<br><strong>Movements</strong> <span style="opacity:.6">(${totalMeasures} mm. total)</span>:<br>${movements}`;
+
+                    const x = event.pageX || (event.touches && event.touches[0].pageX) || 0;
+                    const y = event.pageY || (event.touches && event.touches[0].pageY) || 0;
+                    const bodyTransform = window.getComputedStyle(document.body).transform;
+                    let scale = 1;
+                    if (bodyTransform && bodyTransform !== 'none') {
+                        const match = bodyTransform.match(/matrix\(([^,]+)/);
+                        if (match) scale = parseFloat(match[1]);
+                    }
+                    tooltip.html(html)
+                        .style('left', (x / scale + 10) + 'px')
+                        .style('top', (y / scale - 10) + 'px')
+                        .style('opacity', 1);
+                };
+
+                const hideTooltip = function() {
+                    d3.select(this).style('border-color', getBorderColor());
+                    tooltip.style('opacity', 0);
+                    activeCard = null;
+                };
+
+                const card = parent.append('div').attr('class', 'quartet-card');
+                if (opus.color) card.style('--opus-color', opus.color);
+
+                if (isTouchDevice) {
+                    card.on('click', function(event) {
+                        event.stopPropagation();
+                        if (activeCard === this) hideTooltip.call(this);
+                        else showTooltip.call(this, event);
+                    });
+                } else {
+                    card.on('mouseover', showTooltip).on('mouseout', hideTooltip);
+                }
+
+                // Mode bar: Hoboken № (left), number-in-opus (right)
+                const modeBar = card.append('div')
+                    .attr('class', `mode-bar ${quartet.major ? 'major' : 'minor'}`);
+                modeBar.append('div').attr('class', 'hob-number').text(quartet.hoboken || '');
+                modeBar.append('div').attr('class', 'quartet-number')
+                    .text(quartet.number != null ? `#${quartet.number}` : '');
+
+                const content = card.append('div').attr('class', 'card-content');
+
+                if (quartet.nickname) {
+                    content.append('div').attr('class', 'nickname').text(quartet.nickname);
+                }
+
+                const keySection = content.append('div').attr('class', 'key-section');
+                keySection.append('div').attr('class', 'key-signature')
+                    .text(quartet.key.replace('-flat', '♭').replace('-sharp', '♯'));
+                keySection.append('div').attr('class', 'key-mode')
+                    .text(quartet.major ? 'major' : 'minor');
+
+                // Accidentals on the left edge
+                const sig = c5.get(keyName(quartet));
+                if (sig && sig.count > 0) {
+                    const acc = card.append('div').attr('class', 'key-accidentals');
+                    for (let i = 0; i < sig.count; i++) acc.append('span').text(sig.sign);
+                }
+
+                // Bottom-corner tags: key position (left), Peters volume (right)
+                if (quartet.key_count) {
+                    card.append('div').attr('class', 'card-corner key-pos')
+                        .text(`${quartet.key_number}/${quartet.key_count}`);
+                }
+                if (quartet.peters) {
+                    card.append('div').attr('class', 'card-corner peters-vol')
+                        .text(PETERS[quartet.peters]);
+                }
+
+                // Movement bars
+                const mvmtCount = quartet.mvmts.length;
+                // Center the bars when leading movements are missing (Op. 103 only
+                // has movements 2 & 3), to signal they aren't the opening movements.
+                const mvmtNums = quartet.mvmtNums || [];
+                const partial = mvmtNums.length > 0 && mvmtNums[0] > 1;
+                const movementsDiv = card.append('div')
+                    .attr('class', partial ? 'movements-count centered' : 'movements-count');
+
+                const styles = getComputedStyle(document.documentElement);
+                const lineHeight = parseFloat(styles.getPropertyValue('--mvmt-line-height')) || 10;
+                const barColor = styles.getPropertyValue('--mvmt-bar-color').trim() || '#444444';
+                const minuetColor = styles.getPropertyValue('--mvmt-bar-minuet').trim() || '#EEEEEE';
+                const spotifyColor = styles.getPropertyValue('--mvmt-bar-spotify').trim() || '#1DB954';
+                const tracks = quartet.tracks || [];
+
+                const minuetIndices = new Set(
+                    quartet.mvmts.map((m, i) => isMinuet(m) ? i : -1).filter(i => i >= 0)
+                );
+
+                // Bar width proportional to each movement's measure count, using a
+                // single global scale (pxPerMeasure) so total length is comparable
+                // across quartets. MIN_BAR keeps very short movements visible.
+                const widths = quartet.measures.map(m => Math.max(MIN_BAR, m * pxPerMeasure));
+                const xs = [];
+                let xRun = 0;
+                widths.forEach(w => { xs.push(xRun); xRun += w + BAR_GAP; });
+                const svgWidth = xRun - BAR_GAP;
+
+                const svg = movementsDiv.append('svg')
+                    .attr('class', 'mvmt-lines-svg')
+                    .attr('width', svgWidth)
+                    .attr('height', lineHeight)
+                    .attr('viewBox', `0 0 ${svgWidth} ${lineHeight}`);
+                const cornerRadius = lineHeight / 4;
+                const rects = svg.selectAll('rect')
+                    .data(d3.range(mvmtCount)).enter().append('rect')
+                    .attr('x', d => xs[d])
+                    .attr('y', 0.75)
+                    .attr('width', d => widths[d])
+                    .attr('height', lineHeight - 1.5)
+                    .attr('rx', cornerRadius).attr('ry', cornerRadius)
+                    .attr('fill', d => minuetIndices.has(d) ? minuetColor : barColor)
+                    // outline minuet bars so they read on light opus-colored badges
+                    .attr('stroke', d => minuetIndices.has(d) ? 'rgba(0,0,0,0.35)' : 'none')
+                    .attr('stroke-width', 0.75)
+                    .style('cursor', d => tracks[d] ? 'pointer' : 'default')
+                    .on('mouseover', function(event, d) {
+                        if (tracks[d]) d3.select(this).attr('fill', spotifyColor);
+                    })
+                    .on('mouseout', function(event, d) {
+                        d3.select(this).attr('fill', minuetIndices.has(d) ? minuetColor : barColor);
+                    })
+                    .on('click', function(event, d) {
+                        if (tracks[d]) {
+                            event.stopPropagation();
+                            window.open(tracks[d], '_blank', 'noopener');
+                        }
+                    });
+                rects.append('title')
+                    .text(d => `${mvmtNums[d] || d + 1}. ${quartet.mvmts[d]} — ${quartet.measures[d]} mm.`
+                        + (tracks[d] ? ' (click to play)' : ''));
+
+                return card;
+            }
+
+            // === GLOBAL MOVEMENT-BAR SCALE ===
+            // One px-per-measure factor shared by every card, chosen so the
+            // longest quartet (bars + gaps) just fills the available strip. This
+            // makes total bar length proportional to a quartet's measure count.
+            const BAR_GAP = 3, BAR_PAD = 8, MIN_BAR = 3;
+            const probe = container.append('div')
+                .style('width', 'var(--card-height)')
+                .style('position', 'absolute')
+                .style('visibility', 'hidden');
+            // offsetWidth = layout px; getBoundingClientRect would return the
+            // transform-scaled width under the mobile scale(0.35) layout, which
+            // would shrink every movement bar to ~1/3 of the card.
+            const cardPx = probe.node().offsetWidth || 140;
+            probe.remove();
+            const usableBar = cardPx - BAR_PAD;
+            const sum = arr => arr.reduce((a, b) => a + b, 0);
+            const allQuartets = operaData.flatMap(o => o.quartets);
+            const pxPerMeasure = d3.min(allQuartets, q =>
+                (usableBar - (q.measures.length - 1) * BAR_GAP) / sum(q.measures));
+
+            // === RENDER ROWS ===
+            // operaData is a flat list of opus blocks, each tagged with a row index.
+            // Blocks sharing a row index render side by side; a later block (Op. 103)
+            // is pushed to the far right so its card lands in the 6th column.
+            d3.groups(operaData, d => d.row).forEach(([, blocks]) => {
+                const row = container.append('div').attr('class', 'opus-row');
+                blocks.forEach((opus, i) => {
+                    const label = renderOpusLabel(row, opus);
+                    // Rows are full table width, so margin-left:auto on a later block
+                    // pushes it (Op. 103) to the right edge — the last quartet, last column.
+                    if (i > 0) label.style('margin-left', 'auto');
+                    const qc = row.append('div').attr('class', 'quartets-container');
+                    // Place each quartet in its grid column; empty columns (absent
+                    // quartets) get a blank spacer so the gap is visible.
+                    const byCol = new Map(opus.quartets.map(q => [q.column, q]));
+                    const maxCol = Math.max(...opus.quartets.map(q => q.column));
+                    for (let c = 1; c <= maxCol; c++) {
+                        if (byCol.has(c)) renderQuartetCard(qc, opus, byCol.get(c));
+                        else qc.append('div').attr('class', 'quartet-blank');
+                    }
+                });
+            });
+        }).catch(error => {
+            console.error('Error loading opera.json:', error);
+            d3.select('#visualization').append('p')
+                .style('color', 'red')
+                .text('Error loading data. Ensure opera.json is in the same directory as this HTML file.');
+        });
+    </script>
+</body>
+</html>

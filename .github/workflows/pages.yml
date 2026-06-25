@@ -1,0 +1,40 @@
+name: Deploy web card to GitHub Pages
+
+# Publishes the static interactive card in web/ to GitHub Pages.
+# The site is just web/index.html + web/opera.json + web/d3.v7.min.js (all
+# relative paths), so it serves correctly under the project subpath.
+# Regenerate web/opera.json locally with `web/build.sh` and commit it; this
+# workflow only publishes the committed files.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; let an in-progress run finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4
