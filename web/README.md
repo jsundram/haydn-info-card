@@ -20,9 +20,10 @@ Each quartet is a card:
 - **Bottom corners**: position within key ("2/4", left) and Peters volume
   (I–IV, right).
 - **Movement bars** (bottom strip): one bar per movement, **width proportional
-  to its measure count** on a single global scale (so total length is comparable
-  across quartets), tinted with the **opus color**; minuet/scherzo bars are
-  lighter + outlined. **Click a bar to play the movement on Spotify.**
+  to its duration** (the exact length of the linked Spotify track) on a single
+  global scale (so total length is comparable across quartets), tinted with the
+  **opus color**; minuet/scherzo bars are lighter + outlined. **Click a bar to
+  play the movement on Spotify.**
 
 Hover (or tap) a card for a tooltip: opus/number/key, Hoboken number, nickname,
 Peters volume, position within key, and the movement list with per-movement and
@@ -77,6 +78,20 @@ sheet (sibling repo: `../quartet-chooser/.sheet_cache/… - The Movements.json`,
 the `--spotify` default). If absent, the build still succeeds without `tracks`
 (bars not clickable); all 280 movements are covered when present.
 
+**Movement durations** (which drive the bar widths) are the exact lengths of the
+linked Spotify tracks, cached in `data/spotify_durations.json` (committed).
+Regenerate that cache only when the track links change:
+
+```sh
+SPOTIFY_CLIENT_ID=… SPOTIFY_CLIENT_SECRET=… uv run src/spotify_durations.py
+```
+
+Credentials live in the [Spotify dashboard](https://developer.spotify.com/dashboard/9c4d88ab97ac4bb7979f398627c764c3)
+(client-credentials flow, no user login). They're read from the env and never
+written to disk; `accounts/api.spotify.com` are in the project sandbox network
+allowlist. If the cache is missing, durations fall back to the Angeles Quartet
+recordings in `movements.json`.
+
 ## Build / screenshots
 
 `./build.sh` regenerates `opera.json` and renders (git-ignored) screenshots:
@@ -113,7 +128,7 @@ python3 -m http.server 8000   # from web/, then open http://localhost:8000/
     id, opus (int), number (#|null), hoboken ("III:N"|null),
     key ("B-flat"|"D"), major (bool), nickname, peters (1–4|null),
     key_number, key_count, column (1–6),
-    mvmts:[tempo], measures:[int], mvmtNums:[int], tracks:[url|null]
+    mvmts:[tempo], measures:[int], durations:[sec], mvmtNums:[int], tracks:[url|null]
   } ] }
 ```
 
@@ -126,9 +141,10 @@ python3 -m http.server 8000   # from web/, then open http://localhost:8000/
   and Op. 1 #0 fills the slot vacated by the absent 1#5 (column 5).
 - *Opus color* is set inline as `--opus-color` on the label and each card; it
   drives the label splash gradient and the movement-bar badge.
-- *Movement bars* use one global `pxPerMeasure` (computed once) so the longest
+- *Movement bars* use one global `pxPerSec` (computed once) so the longest
   quartet fills the badge and the rest are proportional; Op. 103 is centered
-  because its surviving movements are 2 & 3.
+  because its surviving movements are 2 & 3. `durations` = exact Spotify
+  linked-track length (else the Angeles recording); see below.
 - The "Opus" prefix is `rem`-sized (independent of the number) so it aligns on
   every label; 3+ char numbers ("103", "54/55") get the `.compact` class.
 

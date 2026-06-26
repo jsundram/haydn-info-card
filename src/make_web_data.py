@@ -26,6 +26,10 @@ DEFAULT_SPOTIFY = ("../quartet-chooser/.sheet_cache/"
 # (opus, work, mvmt) -> spotify url, populated in main() if the sheet is found.
 SPOTIFY = {}
 
+# track_id -> duration_ms, from data/spotify_durations.json (exact linked-track
+# lengths fetched by src/spotify_durations.py). Overlays the Angeles durations.
+SPOTIFY_DUR = {}
+
 
 def load_spotify(path):
     """Map (opus:int, work:str, mvmt:str) -> spotify url from the movements sheet.
@@ -146,12 +150,23 @@ def column(opus, number):
     return number
 
 
+def track_duration(movement, url):
+    """Seconds: exact Spotify length of the linked track when known, otherwise the
+    Angeles recording's duration."""
+    if url and "/track/" in url:
+        ms = SPOTIFY_DUR.get(url.rsplit("/track/", 1)[1].split("?")[0])
+        if ms:
+            return round(ms / 1000, 1)
+    return round(movement["duration"], 1)
+
+
 def make_quartet(q):
     key, major = parse_key(q["key"])
     hob = q.get("hoboken")
     number = q.get("#")
     mvmts = ordered_movements(q)
     work = "" if number is None else str(number)
+    tracks = [SPOTIFY.get((q["opus"], work, str(m["mvmt"]))) for m in mvmts]
     quartet = {
         "id": q["ID"],
         "opus": q["opus"],
@@ -166,11 +181,15 @@ def make_quartet(q):
         "key_count": q.get("key_count"),
         "mvmts": [m["tempo"] for m in mvmts],
         "measures": [m["measures"] for m in mvmts],
+        # Movement length in seconds — exact Spotify linked-track duration when
+        # available (src/spotify_durations.py), else the Angeles recording. Drives
+        # the movement-bar widths.
+        "durations": [track_duration(m, t) for m, t in zip(mvmts, tracks)],
         # Real movement numbers — Op. 103 only preserves movements 2 and 3.
         "mvmtNums": [m["mvmt"] for m in mvmts],
     }
-    if SPOTIFY:
-        quartet["tracks"] = [SPOTIFY.get((q["opus"], work, str(m["mvmt"]))) for m in mvmts]
+    if any(tracks):
+        quartet["tracks"] = tracks
     return quartet
 
 
@@ -180,10 +199,14 @@ def make_quartet(q):
 @click.option("-d", "--datadir", default="./data", help="data directory")
 @click.option("-s", "--spotify", default=DEFAULT_SPOTIFY, help="quartetroulette movements sheet (for Spotify links)")
 def main(outfile, color_json, datadir, spotify):
-    global SPOTIFY
+    global SPOTIFY, SPOTIFY_DUR
     SPOTIFY = load_spotify(spotify)
     print("spotify: %d movement links" % len(SPOTIFY) if SPOTIFY
           else "spotify: sheet not found (%s) — no links" % spotify)
+    dur_path = os.path.join(datadir, "spotify_durations.json")
+    if os.path.exists(dur_path):
+        SPOTIFY_DUR = json.load(open(dur_path))
+        print("spotify: %d exact track durations" % len(SPOTIFY_DUR))
     quartets = Quartets.get_data(data_dir=datadir, colorf=color_json, extend=False)
     by_opus = {}
     for q in quartets:

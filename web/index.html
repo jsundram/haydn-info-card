@@ -545,7 +545,7 @@
                 <span class="item"><span class="swatch minor"></span> minor key (gray bar)</span>
                 <span class="item">accidentals on left edge</span>
                 <span class="item">Hob. = Hoboken III № &middot; #n = № in opus</span>
-                <span class="item">bar width &prop; movement length (measures)</span>
+                <span class="item">bar width &prop; movement length (duration)</span>
                 <span class="item"><span class="swatch minuet"></span> minuet/scherzo movement</span>
                 <span class="item">click a bar to play on Spotify &#9654;</span>
             </div>
@@ -758,10 +758,10 @@
                     quartet.mvmts.map((m, i) => isMinuet(m) ? i : -1).filter(i => i >= 0)
                 );
 
-                // Bar width proportional to each movement's measure count, using a
-                // single global scale (pxPerMeasure) so total length is comparable
-                // across quartets. MIN_BAR keeps very short movements visible.
-                const widths = quartet.measures.map(m => Math.max(MIN_BAR, m * pxPerMeasure));
+                // Bar width proportional to each movement's duration (seconds), on
+                // the single global scale, so total length is comparable across
+                // quartets. MIN_BAR keeps very short movements visible.
+                const widths = quartet.durations.map(s => Math.max(MIN_BAR, s * pxPerSec));
                 const xs = [];
                 let xRun = 0;
                 widths.forEach(w => { xs.push(xRun); xRun += w + BAR_GAP; });
@@ -821,8 +821,10 @@
             const usableBar = cardPx - BAR_PAD;
             const sum = arr => arr.reduce((a, b) => a + b, 0);
             const allQuartets = operaData.flatMap(o => o.quartets);
-            const pxPerMeasure = d3.min(allQuartets, q =>
-                (usableBar - (q.measures.length - 1) * BAR_GAP) / sum(q.measures));
+            // Bars scale by movement duration (seconds): one global px-per-second
+            // so the longest quartet fills the badge and the rest are proportional.
+            const pxPerSec = d3.min(allQuartets, q =>
+                (usableBar - (q.durations.length - 1) * BAR_GAP) / sum(q.durations));
 
             // === RENDER ROWS ===
             // operaData is a flat list of opus blocks, each tagged with a row index.
