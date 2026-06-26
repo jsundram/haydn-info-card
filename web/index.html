@@ -590,6 +590,11 @@
             const keyName = q => `${q.key} ${q.major ? 'major' : 'minor'}`;
             const isMinuet = m => m.includes('Menu') || m.includes('Scherz');
             const PETERS = ['', 'I', 'II', 'III', 'IV'];
+            // durations are {angeles, buchberger} per movement; the bars use the
+            // Buchberger (linked-track) length, falling back to Angeles.
+            const barSec = d => d.buchberger != null ? d.buchberger : d.angeles;
+            const mmss = s => s == null ? '–' :
+                `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
             const ordinal = n => {
                 const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
                 return n + (s[(v - 20) % 10] || s[v] || s[0]);
@@ -646,11 +651,11 @@
                     activeCard = this;
                     d3.select(this).style('border-color', getActiveBorderColor());
 
-                    const totalMeasures = quartet.measures.reduce((a, b) => a + b, 0);
                     const tracks = quartet.tracks || [];
                     const nums = quartet.mvmtNums || [];
                     const movements = quartet.mvmts.map((m, i) => {
-                        const label = `${nums[i] || i + 1}. ${m} <span style="opacity:.6">(${quartet.measures[i]} mm.)</span>`;
+                        const d = quartet.durations[i];
+                        const label = `${nums[i] || i + 1}. ${m} <span style="opacity:.6">${mmss(d.buchberger)} / ${mmss(d.angeles)}</span>`;
                         return tracks[i]
                             ? `<a href="${tracks[i]}" target="_blank" rel="noopener noreferrer" class="mvmt-link">${label}</a>`
                             : label;
@@ -667,7 +672,7 @@
                         bits.push(`${ordinal(quartet.key_number)} of ${quartet.key_count} in ${keyName(quartet)}`);
                     }
                     if (bits.length) html += `${bits.join(' · ')}<br>`;
-                    html += `<br><strong>Movements</strong> <span style="opacity:.6">(${totalMeasures} mm. total)</span>:<br>${movements}`;
+                    html += `<br><strong>Movements</strong> <span style="opacity:.6">(Buchberger / Angeles)</span>:<br>${movements}`;
 
                     const x = event.pageX || (event.touches && event.touches[0].pageX) || 0;
                     const y = event.pageY || (event.touches && event.touches[0].pageY) || 0;
@@ -761,7 +766,7 @@
                 // Bar width proportional to each movement's duration (seconds), on
                 // the single global scale, so total length is comparable across
                 // quartets. MIN_BAR keeps very short movements visible.
-                const widths = quartet.durations.map(s => Math.max(MIN_BAR, s * pxPerSec));
+                const widths = quartet.durations.map(d => Math.max(MIN_BAR, barSec(d) * pxPerSec));
                 const xs = [];
                 let xRun = 0;
                 widths.forEach(w => { xs.push(xRun); xRun += w + BAR_GAP; });
@@ -798,7 +803,7 @@
                         }
                     });
                 rects.append('title')
-                    .text(d => `${mvmtNums[d] || d + 1}. ${quartet.mvmts[d]} — ${quartet.measures[d]} mm.`
+                    .text(d => `${mvmtNums[d] || d + 1}. ${quartet.mvmts[d]} — ${mmss(barSec(quartet.durations[d]))}`
                         + (tracks[d] ? ' (click to play)' : ''));
 
                 return card;
@@ -824,7 +829,7 @@
             // Bars scale by movement duration (seconds): one global px-per-second
             // so the longest quartet fills the badge and the rest are proportional.
             const pxPerSec = d3.min(allQuartets, q =>
-                (usableBar - (q.durations.length - 1) * BAR_GAP) / sum(q.durations));
+                (usableBar - (q.durations.length - 1) * BAR_GAP) / sum(q.durations.map(barSec)));
 
             // === RENDER ROWS ===
             // operaData is a flat list of opus blocks, each tagged with a row index.

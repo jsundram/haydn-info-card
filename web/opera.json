@@ -33,11 +33,26 @@
           74
         ],
         "durations": [
-          144.2,
-          256.6,
-          311.2,
-          249.9,
-          144.5
+          {
+            "angeles": 173.7,
+            "buchberger": 144.2
+          },
+          {
+            "angeles": 231.0,
+            "buchberger": 256.6
+          },
+          {
+            "angeles": 286.0,
+            "buchberger": 311.2
+          },
+          {
+            "angeles": 219.1,
+            "buchberger": 249.9
+          },
+          {
+            "angeles": 140.4,
+            "buchberger": 144.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -81,11 +96,26 @@
           68
         ],
         "durations": [
-          154.3,
-          236.0,
-          287.7,
-          156.5,
-          136.3
+          {
+            "angeles": 176.2,
+            "buchberger": 154.3
+          },
+          {
+            "angeles": 224.7,
+            "buchberger": 236.0
+          },
+          {
+            "angeles": 340.9,
+            "buchberger": 287.7
+          },
+          {
+            "angeles": 152.1,
+            "buchberger": 156.5
+          },
+          {
+            "angeles": 132.7,
+            "buchberger": 136.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -129,11 +159,26 @@
           78
         ],
         "durations": [
-          210.5,
-          214.9,
-          282.1,
-          212.8,
-          126.8
+          {
+            "angeles": 230.9,
+            "buchberger": 210.5
+          },
+          {
+            "angeles": 220.1,
+            "buchberger": 214.9
+          },
+          {
+            "angeles": 295.1,
+            "buchberger": 282.1
+          },
+          {
+            "angeles": 206.9,
+            "buchberger": 212.8
+          },
+          {
+            "angeles": 129.4,
+            "buchberger": 126.8
+          }
         ],
         "mvmtNums": [
           1,
@@ -177,11 +222,26 @@
           148
         ],
         "durations": [
-          300.5,
-          169.8,
-          93.3,
-          201.0,
-          100.2
+          {
+            "angeles": 371.1,
+            "buchberger": 300.5
+          },
+          {
+            "angeles": 157.9,
+            "buchberger": 169.8
+          },
+          {
+            "angeles": 104.1,
+            "buchberger": 93.3
+          },
+          {
+            "angeles": 190.7,
+            "buchberger": 201.0
+          },
+          {
+            "angeles": 98.5,
+            "buchberger": 100.2
+          }
         ],
         "mvmtNums": [
           1,
@@ -225,11 +285,26 @@
           99
         ],
         "durations": [
-          264.7,
-          233.6,
-          228.5,
-          224.6,
-          240.5
+          {
+            "angeles": 252.5,
+            "buchberger": 264.7
+          },
+          {
+            "angeles": 216.1,
+            "buchberger": 233.6
+          },
+          {
+            "angeles": 308.6,
+            "buchberger": 228.5
+          },
+          {
+            "angeles": 217.5,
+            "buchberger": 224.6
+          },
+          {
+            "angeles": 181.0,
+            "buchberger": 240.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -273,11 +348,26 @@
           76
         ],
         "durations": [
-          113.9,
-          225.1,
-          379.2,
-          271.8,
-          142.3
+          {
+            "angeles": 147.1,
+            "buchberger": 113.9
+          },
+          {
+            "angeles": 232.4,
+            "buchberger": 225.1
+          },
+          {
+            "angeles": 193.7,
+            "buchberger": 379.2
+          },
+          {
+            "angeles": 258.8,
+            "buchberger": 271.8
+          },
+          {
+            "angeles": 144.0,
+            "buchberger": 142.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -330,11 +420,26 @@
           79
         ],
         "durations": [
-          222.1,
-          198.2,
-          305.2,
-          172.3,
-          140.7
+          {
+            "angeles": 263.2,
+            "buchberger": 222.1
+          },
+          {
+            "angeles": 179.9,
+            "buchberger": 198.2
+          },
+          {
+            "angeles": 291.0,
+            "buchberger": 305.2
+          },
+          {
+            "angeles": 152.0,
+            "buchberger": 172.3
+          },
+          {
+            "angeles": 139.7,
+            "buchberger": 140.7
+          }
         ],
         "mvmtNums": [
           1,
@@ -378,11 +483,26 @@
           122
         ],
         "durations": [
-          202.8,
-          207.5,
-          356.6,
-          191.9,
-          193.4
+          {
+            "angeles": 226.7,
+            "buchberger": 202.8
+          },
+          {
+            "angeles": 198.8,
+            "buchberger": 207.5
+          },
+          {
+            "angeles": 314.3,
+            "buchberger": 356.6
+          },
+          {
+            "angeles": 203.9,
+            "buchberger": 191.9
+          },
+          {
+            "angeles": 207.0,
+            "buchberger": 193.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -426,11 +546,26 @@
           76
         ],
         "durations": [
-          231.4,
-          250.6,
-          303.7,
-          125.0,
-          143.9
+          {
+            "angeles": 251.1,
+            "buchberger": 231.4
+          },
+          {
+            "angeles": 253.9,
+            "buchberger": 250.6
+          },
+          {
+            "angeles": 336.1,
+            "buchberger": 303.7
+          },
+          {
+            "angeles": 141.0,
+            "buchberger": 125.0
+          },
+          {
+            "angeles": 144.1,
+            "buchberger": 143.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -474,11 +609,26 @@
           75
         ],
         "durations": [
-          379.3,
-          215.8,
-          123.3,
-          157.4,
-          144.9
+          {
+            "angeles": 457.8,
+            "buchberger": 379.3
+          },
+          {
+            "angeles": 219.0,
+            "buchberger": 215.8
+          },
+          {
+            "angeles": 126.0,
+            "buchberger": 123.3
+          },
+          {
+            "angeles": 174.0,
+            "buchberger": 157.4
+          },
+          {
+            "angeles": 129.6,
+            "buchberger": 144.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -529,10 +679,22 @@
           156
         ],
         "durations": [
-          327.3,
-          204.1,
-          417.5,
-          172.4
+          {
+            "angeles": 414.6,
+            "buchberger": 327.3
+          },
+          {
+            "angeles": 205.1,
+            "buchberger": 204.1
+          },
+          {
+            "angeles": 348.8,
+            "buchberger": 417.5
+          },
+          {
+            "angeles": 265.2,
+            "buchberger": 172.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -572,10 +734,22 @@
           57
         ],
         "durations": [
-          366.2,
-          155.0,
-          318.7,
-          208.2
+          {
+            "angeles": 369.0,
+            "buchberger": 366.2
+          },
+          {
+            "angeles": 162.3,
+            "buchberger": 155.0
+          },
+          {
+            "angeles": 290.9,
+            "buchberger": 318.7
+          },
+          {
+            "angeles": 190.9,
+            "buchberger": 208.2
+          }
         ],
         "mvmtNums": [
           1,
@@ -615,10 +789,22 @@
           138
         ],
         "durations": [
-          260.6,
-          183.4,
-          355.3,
-          185.0
+          {
+            "angeles": 245.1,
+            "buchberger": 260.6
+          },
+          {
+            "angeles": 177.9,
+            "buchberger": 183.4
+          },
+          {
+            "angeles": 320.2,
+            "buchberger": 355.3
+          },
+          {
+            "angeles": 158.8,
+            "buchberger": 185.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -658,10 +844,22 @@
           93
         ],
         "durations": [
-          398.5,
-          279.6,
-          317.6,
-          245.2
+          {
+            "angeles": 413.1,
+            "buchberger": 398.5
+          },
+          {
+            "angeles": 268.0,
+            "buchberger": 279.6
+          },
+          {
+            "angeles": 275.9,
+            "buchberger": 317.6
+          },
+          {
+            "angeles": 241.9,
+            "buchberger": 245.2
+          }
         ],
         "mvmtNums": [
           1,
@@ -701,10 +899,22 @@
           217
         ],
         "durations": [
-          413.3,
-          166.0,
-          409.4,
-          317.9
+          {
+            "angeles": 435.6,
+            "buchberger": 413.3
+          },
+          {
+            "angeles": 155.1,
+            "buchberger": 166.0
+          },
+          {
+            "angeles": 312.0,
+            "buchberger": 409.4
+          },
+          {
+            "angeles": 237.1,
+            "buchberger": 317.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -744,10 +954,22 @@
           53
         ],
         "durations": [
-          227.4,
-          257.6,
-          258.3,
-          89.3
+          {
+            "angeles": 264.9,
+            "buchberger": 227.4
+          },
+          {
+            "angeles": 265.4,
+            "buchberger": 257.6
+          },
+          {
+            "angeles": 248.9,
+            "buchberger": 258.3
+          },
+          {
+            "angeles": 97.0,
+            "buchberger": 89.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -796,10 +1018,22 @@
           237
         ],
         "durations": [
-          386.1,
-          312.8,
-          443.5,
-          222.1
+          {
+            "angeles": 364.1,
+            "buchberger": 386.1
+          },
+          {
+            "angeles": 289.8,
+            "buchberger": 312.8
+          },
+          {
+            "angeles": 324.2,
+            "buchberger": 443.5
+          },
+          {
+            "angeles": 234.2,
+            "buchberger": 222.1
+          }
         ],
         "mvmtNums": [
           1,
@@ -839,10 +1073,22 @@
           169
         ],
         "durations": [
-          296.6,
-          200.4,
-          303.0,
-          239.4
+          {
+            "angeles": 284.0,
+            "buchberger": 296.6
+          },
+          {
+            "angeles": 185.1,
+            "buchberger": 200.4
+          },
+          {
+            "angeles": 303.1,
+            "buchberger": 303.0
+          },
+          {
+            "angeles": 220.3,
+            "buchberger": 239.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -882,10 +1128,22 @@
           69
         ],
         "durations": [
-          415.6,
-          192.0,
-          494.4,
-          238.2
+          {
+            "angeles": 443.0,
+            "buchberger": 415.6
+          },
+          {
+            "angeles": 221.8,
+            "buchberger": 192.0
+          },
+          {
+            "angeles": 310.9,
+            "buchberger": 494.4
+          },
+          {
+            "angeles": 171.3,
+            "buchberger": 238.2
+          }
         ],
         "mvmtNums": [
           1,
@@ -925,10 +1183,22 @@
           136
         ],
         "durations": [
-          360.6,
-          292.0,
-          408.5,
-          256.4
+          {
+            "angeles": 356.0,
+            "buchberger": 360.6
+          },
+          {
+            "angeles": 261.9,
+            "buchberger": 292.0
+          },
+          {
+            "angeles": 382.9,
+            "buchberger": 408.5
+          },
+          {
+            "angeles": 256.0,
+            "buchberger": 256.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -968,10 +1238,22 @@
           135
         ],
         "durations": [
-          363.5,
-          156.2,
-          313.4,
-          163.9
+          {
+            "angeles": 389.2,
+            "buchberger": 363.5
+          },
+          {
+            "angeles": 175.0,
+            "buchberger": 156.2
+          },
+          {
+            "angeles": 315.0,
+            "buchberger": 313.4
+          },
+          {
+            "angeles": 215.0,
+            "buchberger": 163.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -1011,10 +1293,22 @@
           151
         ],
         "durations": [
-          277.8,
-          175.8,
-          365.1,
-          256.6
+          {
+            "angeles": 333.0,
+            "buchberger": 277.8
+          },
+          {
+            "angeles": 172.9,
+            "buchberger": 175.8
+          },
+          {
+            "angeles": 333.0,
+            "buchberger": 365.1
+          },
+          {
+            "angeles": 256.7,
+            "buchberger": 256.6
+          }
         ],
         "mvmtNums": [
           1,
@@ -1063,10 +1357,22 @@
           160
         ],
         "durations": [
-          385.3,
-          245.4,
-          365.2,
-          215.8
+          {
+            "angeles": 382.7,
+            "buchberger": 385.3
+          },
+          {
+            "angeles": 241.0,
+            "buchberger": 245.4
+          },
+          {
+            "angeles": 298.0,
+            "buchberger": 365.2
+          },
+          {
+            "angeles": 172.2,
+            "buchberger": 215.8
+          }
         ],
         "mvmtNums": [
           1,
@@ -1106,10 +1412,22 @@
           162
         ],
         "durations": [
-          409.1,
-          344.5,
-          226.2,
-          208.4
+          {
+            "angeles": 419.0,
+            "buchberger": 409.1
+          },
+          {
+            "angeles": 361.3,
+            "buchberger": 344.5
+          },
+          {
+            "angeles": 237.7,
+            "buchberger": 226.2
+          },
+          {
+            "angeles": 215.9,
+            "buchberger": 208.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -1149,10 +1467,22 @@
           104
         ],
         "durations": [
-          363.1,
-          287.4,
-          529.5,
-          236.0
+          {
+            "angeles": 374.9,
+            "buchberger": 363.1
+          },
+          {
+            "angeles": 280.0,
+            "buchberger": 287.4
+          },
+          {
+            "angeles": 392.0,
+            "buchberger": 529.5
+          },
+          {
+            "angeles": 331.4,
+            "buchberger": 236.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -1192,10 +1522,22 @@
           126
         ],
         "durations": [
-          444.5,
-          504.5,
-          93.1,
-          292.4
+          {
+            "angeles": 486.8,
+            "buchberger": 444.5
+          },
+          {
+            "angeles": 593.7,
+            "buchberger": 504.5
+          },
+          {
+            "angeles": 103.0,
+            "buchberger": 93.1
+          },
+          {
+            "angeles": 411.3,
+            "buchberger": 292.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -1235,10 +1577,22 @@
           184
         ],
         "durations": [
-          414.0,
-          350.9,
-          327.2,
-          179.5
+          {
+            "angeles": 422.2,
+            "buchberger": 414.0
+          },
+          {
+            "angeles": 329.9,
+            "buchberger": 350.9
+          },
+          {
+            "angeles": 334.1,
+            "buchberger": 327.2
+          },
+          {
+            "angeles": 176.3,
+            "buchberger": 179.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -1278,10 +1632,22 @@
           95
         ],
         "durations": [
-          181.5,
-          332.9,
-          326.8,
-          148.7
+          {
+            "angeles": 393.7,
+            "buchberger": 181.5
+          },
+          {
+            "angeles": 404.1,
+            "buchberger": 332.9
+          },
+          {
+            "angeles": 147.9,
+            "buchberger": 326.8
+          },
+          {
+            "angeles": 189.5,
+            "buchberger": 148.7
+          }
         ],
         "mvmtNums": [
           1,
@@ -1330,10 +1696,22 @@
           194
         ],
         "durations": [
-          309.7,
-          124.3,
-          388.1,
-          239.1
+          {
+            "angeles": 323.2,
+            "buchberger": 309.7
+          },
+          {
+            "angeles": 155.1,
+            "buchberger": 124.3
+          },
+          {
+            "angeles": 426.1,
+            "buchberger": 388.1
+          },
+          {
+            "angeles": 239.9,
+            "buchberger": 239.1
+          }
         ],
         "mvmtNums": [
           1,
@@ -1373,10 +1751,22 @@
           172
         ],
         "durations": [
-          293.7,
-          191.9,
-          249.7,
-          192.5
+          {
+            "angeles": 306.1,
+            "buchberger": 293.7
+          },
+          {
+            "angeles": 227.9,
+            "buchberger": 191.9
+          },
+          {
+            "angeles": 259.2,
+            "buchberger": 249.7
+          },
+          {
+            "angeles": 207.9,
+            "buchberger": 192.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -1416,10 +1806,22 @@
           170
         ],
         "durations": [
-          581.1,
-          158.6,
-          326.5,
-          172.1
+          {
+            "angeles": 411.0,
+            "buchberger": 581.1
+          },
+          {
+            "angeles": 212.9,
+            "buchberger": 158.6
+          },
+          {
+            "angeles": 334.1,
+            "buchberger": 326.5
+          },
+          {
+            "angeles": 171.7,
+            "buchberger": 172.1
+          }
         ],
         "mvmtNums": [
           1,
@@ -1459,10 +1861,22 @@
           214
         ],
         "durations": [
-          294.8,
-          130.4,
-          255.1,
-          289.3
+          {
+            "angeles": 271.7,
+            "buchberger": 294.8
+          },
+          {
+            "angeles": 159.0,
+            "buchberger": 130.4
+          },
+          {
+            "angeles": 237.0,
+            "buchberger": 255.1
+          },
+          {
+            "angeles": 283.0,
+            "buchberger": 289.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -1502,10 +1916,22 @@
           106
         ],
         "durations": [
-          351.6,
-          255.3,
-          168.1,
-          292.4
+          {
+            "angeles": 361.0,
+            "buchberger": 351.6
+          },
+          {
+            "angeles": 296.0,
+            "buchberger": 255.3
+          },
+          {
+            "angeles": 168.0,
+            "buchberger": 168.1
+          },
+          {
+            "angeles": 325.2,
+            "buchberger": 292.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -1545,10 +1971,22 @@
           114
         ],
         "durations": [
-          391.9,
-          247.7,
-          136.7,
-          252.6
+          {
+            "angeles": 336.7,
+            "buchberger": 391.9
+          },
+          {
+            "angeles": 268.3,
+            "buchberger": 247.7
+          },
+          {
+            "angeles": 165.7,
+            "buchberger": 136.7
+          },
+          {
+            "angeles": 338.0,
+            "buchberger": 252.6
+          }
         ],
         "mvmtNums": [
           1,
@@ -1597,10 +2035,22 @@
           103
         ],
         "durations": [
-          238.7,
-          165.2,
-          189.9,
-          160.6
+          {
+            "angeles": 241.0,
+            "buchberger": 238.7
+          },
+          {
+            "angeles": 154.0,
+            "buchberger": 165.2
+          },
+          {
+            "angeles": 212.0,
+            "buchberger": 189.9
+          },
+          {
+            "angeles": 172.0,
+            "buchberger": 160.6
+          }
         ],
         "mvmtNums": [
           1,
@@ -1649,10 +2099,22 @@
           245
         ],
         "durations": [
-          323.9,
-          441.8,
-          184.2,
-          301.3
+          {
+            "angeles": 377.5,
+            "buchberger": 323.9
+          },
+          {
+            "angeles": 449.0,
+            "buchberger": 441.8
+          },
+          {
+            "angeles": 226.8,
+            "buchberger": 184.2
+          },
+          {
+            "angeles": 289.7,
+            "buchberger": 301.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -1692,10 +2154,22 @@
           232
         ],
         "durations": [
-          424.6,
-          286.3,
-          244.5,
-          291.0
+          {
+            "angeles": 440.1,
+            "buchberger": 424.6
+          },
+          {
+            "angeles": 259.0,
+            "buchberger": 286.3
+          },
+          {
+            "angeles": 260.1,
+            "buchberger": 244.5
+          },
+          {
+            "angeles": 220.6,
+            "buchberger": 291.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -1735,10 +2209,22 @@
           203
         ],
         "durations": [
-          278.8,
-          394.6,
-          285.4,
-          217.9
+          {
+            "angeles": 314.0,
+            "buchberger": 278.8
+          },
+          {
+            "angeles": 399.9,
+            "buchberger": 394.6
+          },
+          {
+            "angeles": 288.2,
+            "buchberger": 285.4
+          },
+          {
+            "angeles": 223.1,
+            "buchberger": 217.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -1778,10 +2264,22 @@
           87
         ],
         "durations": [
-          320.3,
-          415.2,
-          255.4,
-          125.6
+          {
+            "angeles": 329.5,
+            "buchberger": 320.3
+          },
+          {
+            "angeles": 468.3,
+            "buchberger": 415.2
+          },
+          {
+            "angeles": 234.0,
+            "buchberger": 255.4
+          },
+          {
+            "angeles": 144.9,
+            "buchberger": 125.6
+          }
         ],
         "mvmtNums": [
           1,
@@ -1821,10 +2319,22 @@
           132
         ],
         "durations": [
-          307.3,
-          197.9,
-          226.3,
-          237.6
+          {
+            "angeles": 308.1,
+            "buchberger": 307.3
+          },
+          {
+            "angeles": 200.9,
+            "buchberger": 197.9
+          },
+          {
+            "angeles": 260.9,
+            "buchberger": 226.3
+          },
+          {
+            "angeles": 245.2,
+            "buchberger": 237.6
+          }
         ],
         "mvmtNums": [
           1,
@@ -1864,10 +2374,22 @@
           243
         ],
         "durations": [
-          375.0,
-          393.6,
-          264.1,
-          307.4
+          {
+            "angeles": 384.7,
+            "buchberger": 375.0
+          },
+          {
+            "angeles": 406.0,
+            "buchberger": 393.6
+          },
+          {
+            "angeles": 288.5,
+            "buchberger": 264.1
+          },
+          {
+            "angeles": 306.9,
+            "buchberger": 307.4
+          }
         ],
         "mvmtNums": [
           1,
@@ -1916,10 +2438,22 @@
           193
         ],
         "durations": [
-          454.6,
-          304.7,
-          256.4,
-          226.0
+          {
+            "angeles": 329.9,
+            "buchberger": 454.6
+          },
+          {
+            "angeles": 411.9,
+            "buchberger": 304.7
+          },
+          {
+            "angeles": 257.9,
+            "buchberger": 256.4
+          },
+          {
+            "angeles": 247.2,
+            "buchberger": 226.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -1959,10 +2493,22 @@
           140
         ],
         "durations": [
-          328.9,
-          178.3,
-          209.7,
-          356.3
+          {
+            "angeles": 413.0,
+            "buchberger": 328.9
+          },
+          {
+            "angeles": 178.9,
+            "buchberger": 178.3
+          },
+          {
+            "angeles": 226.9,
+            "buchberger": 209.7
+          },
+          {
+            "angeles": 343.1,
+            "buchberger": 356.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -2002,10 +2548,22 @@
           218
         ],
         "durations": [
-          391.8,
-          474.7,
-          216.0,
-          292.7
+          {
+            "angeles": 397.7,
+            "buchberger": 391.8
+          },
+          {
+            "angeles": 482.9,
+            "buchberger": 474.7
+          },
+          {
+            "angeles": 223.9,
+            "buchberger": 216.0
+          },
+          {
+            "angeles": 254.9,
+            "buchberger": 292.7
+          }
         ],
         "mvmtNums": [
           1,
@@ -2045,10 +2603,22 @@
           145
         ],
         "durations": [
-          357.3,
-          299.7,
-          190.9,
-          181.5
+          {
+            "angeles": 368.2,
+            "buchberger": 357.3
+          },
+          {
+            "angeles": 315.3,
+            "buchberger": 299.7
+          },
+          {
+            "angeles": 196.5,
+            "buchberger": 190.9
+          },
+          {
+            "angeles": 162.5,
+            "buchberger": 181.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -2088,10 +2658,22 @@
           118
         ],
         "durations": [
-          586.6,
-          319.6,
-          323.7,
-          351.5
+          {
+            "angeles": 618.5,
+            "buchberger": 586.6
+          },
+          {
+            "angeles": 386.8,
+            "buchberger": 319.6
+          },
+          {
+            "angeles": 305.3,
+            "buchberger": 323.7
+          },
+          {
+            "angeles": 248.2,
+            "buchberger": 351.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -2131,10 +2713,22 @@
           103
         ],
         "durations": [
-          412.5,
-          421.5,
-          251.0,
-          317.5
+          {
+            "angeles": 339.2,
+            "buchberger": 412.5
+          },
+          {
+            "angeles": 328.1,
+            "buchberger": 421.5
+          },
+          {
+            "angeles": 244.1,
+            "buchberger": 251.0
+          },
+          {
+            "angeles": 212.5,
+            "buchberger": 317.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -2183,10 +2777,22 @@
           110
         ],
         "durations": [
-          374.5,
-          288.3,
-          402.7,
-          208.3
+          {
+            "angeles": 406.2,
+            "buchberger": 374.5
+          },
+          {
+            "angeles": 273.9,
+            "buchberger": 288.3
+          },
+          {
+            "angeles": 334.1,
+            "buchberger": 402.7
+          },
+          {
+            "angeles": 218.9,
+            "buchberger": 208.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -2226,10 +2832,22 @@
           201
         ],
         "durations": [
-          319.7,
-          352.9,
-          162.9,
-          257.8
+          {
+            "angeles": 299.3,
+            "buchberger": 319.7
+          },
+          {
+            "angeles": 298.9,
+            "buchberger": 352.9
+          },
+          {
+            "angeles": 219.1,
+            "buchberger": 162.9
+          },
+          {
+            "angeles": 237.7,
+            "buchberger": 257.8
+          }
         ],
         "mvmtNums": [
           1,
@@ -2269,10 +2887,22 @@
           245
         ],
         "durations": [
-          333.6,
-          297.7,
-          293.6,
-          315.8
+          {
+            "angeles": 369.1,
+            "buchberger": 333.6
+          },
+          {
+            "angeles": 401.9,
+            "buchberger": 297.7
+          },
+          {
+            "angeles": 311.1,
+            "buchberger": 293.6
+          },
+          {
+            "angeles": 358.4,
+            "buchberger": 315.8
+          }
         ],
         "mvmtNums": [
           1,
@@ -2312,10 +2942,22 @@
           179
         ],
         "durations": [
-          311.1,
-          231.7,
-          287.7,
-          253.3
+          {
+            "angeles": 269.1,
+            "buchberger": 311.1
+          },
+          {
+            "angeles": 213.1,
+            "buchberger": 231.7
+          },
+          {
+            "angeles": 259.0,
+            "buchberger": 287.7
+          },
+          {
+            "angeles": 250.6,
+            "buchberger": 253.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -2355,10 +2997,22 @@
           128
         ],
         "durations": [
-          338.9,
-          350.2,
-          221.3,
-          138.7
+          {
+            "angeles": 383.5,
+            "buchberger": 338.9
+          },
+          {
+            "angeles": 351.0,
+            "buchberger": 350.2
+          },
+          {
+            "angeles": 221.1,
+            "buchberger": 221.3
+          },
+          {
+            "angeles": 141.5,
+            "buchberger": 138.7
+          }
         ],
         "mvmtNums": [
           1,
@@ -2398,10 +3052,22 @@
           192
         ],
         "durations": [
-          323.0,
-          270.3,
-          305.9,
-          207.9
+          {
+            "angeles": 333.0,
+            "buchberger": 323.0
+          },
+          {
+            "angeles": 285.4,
+            "buchberger": 270.3
+          },
+          {
+            "angeles": 210.8,
+            "buchberger": 305.9
+          },
+          {
+            "angeles": 217.6,
+            "buchberger": 207.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -2450,10 +3116,22 @@
           235
         ],
         "durations": [
-          413.8,
-          314.3,
-          210.4,
-          292.3
+          {
+            "angeles": 217.6,
+            "buchberger": 413.8
+          },
+          {
+            "angeles": 424.0,
+            "buchberger": 314.3
+          },
+          {
+            "angeles": 237.0,
+            "buchberger": 210.4
+          },
+          {
+            "angeles": 315.7,
+            "buchberger": 292.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -2493,10 +3171,22 @@
           117
         ],
         "durations": [
-          368.8,
-          293.7,
-          119.0,
-          231.3
+          {
+            "angeles": 378.9,
+            "buchberger": 368.8
+          },
+          {
+            "angeles": 301.0,
+            "buchberger": 293.7
+          },
+          {
+            "angeles": 151.0,
+            "buchberger": 119.0
+          },
+          {
+            "angeles": 212.8,
+            "buchberger": 231.3
+          }
         ],
         "mvmtNums": [
           1,
@@ -2536,10 +3226,22 @@
           142
         ],
         "durations": [
-          387.1,
-          432.5,
-          273.6,
-          252.7
+          {
+            "angeles": 386.0,
+            "buchberger": 387.1
+          },
+          {
+            "angeles": 444.9,
+            "buchberger": 432.5
+          },
+          {
+            "angeles": 286.0,
+            "buchberger": 273.6
+          },
+          {
+            "angeles": 250.4,
+            "buchberger": 252.7
+          }
         ],
         "mvmtNums": [
           1,
@@ -2579,10 +3281,22 @@
           285
         ],
         "durations": [
-          393.5,
-          383.8,
-          247.1,
-          354.9
+          {
+            "angeles": 400.3,
+            "buchberger": 393.5
+          },
+          {
+            "angeles": 432.0,
+            "buchberger": 383.8
+          },
+          {
+            "angeles": 307.0,
+            "buchberger": 247.1
+          },
+          {
+            "angeles": 333.7,
+            "buchberger": 354.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -2622,10 +3336,22 @@
           289
         ],
         "durations": [
-          405.2,
-          457.6,
-          251.2,
-          256.0
+          {
+            "angeles": 388.0,
+            "buchberger": 405.2
+          },
+          {
+            "angeles": 440.0,
+            "buchberger": 457.6
+          },
+          {
+            "angeles": 273.0,
+            "buchberger": 251.2
+          },
+          {
+            "angeles": 255.0,
+            "buchberger": 256.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -2665,10 +3391,22 @@
           146
         ],
         "durations": [
-          323.2,
-          370.1,
-          229.2,
-          346.0
+          {
+            "angeles": 355.1,
+            "buchberger": 323.2
+          },
+          {
+            "angeles": 384.9,
+            "buchberger": 370.1
+          },
+          {
+            "angeles": 247.0,
+            "buchberger": 229.2
+          },
+          {
+            "angeles": 336.6,
+            "buchberger": 346.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -2717,10 +3455,22 @@
           200
         ],
         "durations": [
-          501.2,
-          423.7,
-          150.0,
-          394.9
+          {
+            "angeles": 374.1,
+            "buchberger": 501.2
+          },
+          {
+            "angeles": 460.0,
+            "buchberger": 423.7
+          },
+          {
+            "angeles": 171.9,
+            "buchberger": 150.0
+          },
+          {
+            "angeles": 409.3,
+            "buchberger": 394.9
+          }
         ],
         "mvmtNums": [
           1,
@@ -2760,10 +3510,22 @@
           267
         ],
         "durations": [
-          560.3,
-          341.6,
-          173.4,
-          255.5
+          {
+            "angeles": 433.1,
+            "buchberger": 560.3
+          },
+          {
+            "angeles": 381.0,
+            "buchberger": 341.6
+          },
+          {
+            "angeles": 232.1,
+            "buchberger": 173.4
+          },
+          {
+            "angeles": 257.3,
+            "buchberger": 255.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -2803,10 +3565,22 @@
           188
         ],
         "durations": [
-          614.8,
-          384.7,
-          290.2,
-          346.7
+          {
+            "angeles": 456.4,
+            "buchberger": 614.8
+          },
+          {
+            "angeles": 481.1,
+            "buchberger": 384.7
+          },
+          {
+            "angeles": 320.8,
+            "buchberger": 290.2
+          },
+          {
+            "angeles": 354.5,
+            "buchberger": 346.7
+          }
         ],
         "mvmtNums": [
           1,
@@ -2846,10 +3620,22 @@
           175
         ],
         "durations": [
-          528.3,
-          339.6,
-          246.0,
-          267.5
+          {
+            "angeles": 521.3,
+            "buchberger": 528.3
+          },
+          {
+            "angeles": 356.0,
+            "buchberger": 339.6
+          },
+          {
+            "angeles": 266.0,
+            "buchberger": 246.0
+          },
+          {
+            "angeles": 285.1,
+            "buchberger": 267.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -2889,10 +3675,22 @@
           291
         ],
         "durations": [
-          301.0,
-          415.7,
-          156.8,
-          226.1
+          {
+            "angeles": 326.0,
+            "buchberger": 301.0
+          },
+          {
+            "angeles": 426.0,
+            "buchberger": 415.7
+          },
+          {
+            "angeles": 195.0,
+            "buchberger": 156.8
+          },
+          {
+            "angeles": 224.1,
+            "buchberger": 226.1
+          }
         ],
         "mvmtNums": [
           1,
@@ -2932,10 +3730,22 @@
           166
         ],
         "durations": [
-          398.8,
-          406.7,
-          204.4,
-          396.0
+          {
+            "angeles": 411.9,
+            "buchberger": 398.8
+          },
+          {
+            "angeles": 435.1,
+            "buchberger": 406.7
+          },
+          {
+            "angeles": 257.0,
+            "buchberger": 204.4
+          },
+          {
+            "angeles": 276.1,
+            "buchberger": 396.0
+          }
         ],
         "mvmtNums": [
           1,
@@ -2984,10 +3794,22 @@
           282
         ],
         "durations": [
-          403.9,
-          383.6,
-          235.0,
-          338.5
+          {
+            "angeles": 439.4,
+            "buchberger": 403.9
+          },
+          {
+            "angeles": 406.1,
+            "buchberger": 383.6
+          },
+          {
+            "angeles": 271.4,
+            "buchberger": 235.0
+          },
+          {
+            "angeles": 315.2,
+            "buchberger": 338.5
+          }
         ],
         "mvmtNums": [
           1,
@@ -3027,10 +3849,22 @@
           195
         ],
         "durations": [
-          428.9,
-          290.4,
-          389.0,
-          354.2
+          {
+            "angeles": 449.7,
+            "buchberger": 428.9
+          },
+          {
+            "angeles": 325.7,
+            "buchberger": 290.4
+          },
+          {
+            "angeles": 440.1,
+            "buchberger": 389.0
+          },
+          {
+            "angeles": 331.9,
+            "buchberger": 354.2
+          }
         ],
         "mvmtNums": [
           1,
@@ -3075,8 +3909,14 @@
           86
         ],
         "durations": [
-          381.2,
-          301.9
+          {
+            "angeles": 324.0,
+            "buchberger": 381.2
+          },
+          {
+            "angeles": 325.3,
+            "buchberger": 301.9
+          }
         ],
         "mvmtNums": [
           2,

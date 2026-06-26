@@ -128,7 +128,8 @@ python3 -m http.server 8000   # from web/, then open http://localhost:8000/
     id, opus (int), number (#|null), hoboken ("III:N"|null),
     key ("B-flat"|"D"), major (bool), nickname, peters (1–4|null),
     key_number, key_count, column (1–6),
-    mvmts:[tempo], measures:[int], durations:[sec], mvmtNums:[int], tracks:[url|null]
+    mvmts:[tempo], measures:[int], mvmtNums:[int], tracks:[url|null],
+    durations:[{angeles, buchberger}]  // seconds, per movement, per performance
   } ] }
 ```
 
@@ -143,8 +144,10 @@ python3 -m http.server 8000   # from web/, then open http://localhost:8000/
   drives the label splash gradient and the movement-bar badge.
 - *Movement bars* use one global `pxPerSec` (computed once) so the longest
   quartet fills the badge and the rest are proportional; Op. 103 is centered
-  because its surviving movements are 2 & 3. `durations` = exact Spotify
-  linked-track length (else the Angeles recording); see below.
+  because its surviving movements are 2 & 3. Each `durations` entry is
+  `{angeles, buchberger}` (both recorded performances, in seconds); the bars use
+  `buchberger` (the exact linked Spotify track), and the tooltip shows both. See
+  the durations note above.
 - The "Opus" prefix is `rem`-sized (independent of the number) so it aligns on
   every label; 3+ char numbers ("103", "54/55") get the `.compact` class.
 
