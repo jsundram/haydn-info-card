@@ -26,8 +26,10 @@ DEFAULT_SPOTIFY = ("../quartet-chooser/.sheet_cache/"
 # (opus, work, mvmt) -> spotify url, populated in main() if the sheet is found.
 SPOTIFY = {}
 
-# track_id -> duration_ms, from data/spotify_durations.json (exact linked-track
-# lengths fetched by src/spotify_durations.py). Overlays the Angeles durations.
+# track_id -> {quartet_id, title, duration_ms}, from data/spotify_durations.json
+# (exact linked-track lengths + titles fetched by src/spotify_durations.py).
+# Overlays the Angeles durations. See spotify_ms() for the lookup (it also still
+# accepts the old flat track_id -> duration_ms schema).
 SPOTIFY_DUR = {}
 
 
@@ -150,13 +152,23 @@ def column(opus, number):
     return number
 
 
+def spotify_ms(track_id):
+    """duration_ms for a Spotify track id, or None. Accepts both the current
+    schema (track_id -> {quartet_id, title, duration_ms}) and the old flat one
+    (track_id -> duration_ms)."""
+    entry = SPOTIFY_DUR.get(track_id)
+    if isinstance(entry, dict):
+        return entry.get("duration_ms")
+    return entry
+
+
 def movement_durations(movement, url):
     """Per-movement length in seconds for both recorded performances:
     {"angeles": <local recording>, "buchberger": <exact linked Spotify track>}.
     buchberger is None if the movement has no linked track."""
     buchberger = None
     if url and "/track/" in url:
-        ms = SPOTIFY_DUR.get(url.rsplit("/track/", 1)[1].split("?")[0])
+        ms = spotify_ms(url.rsplit("/track/", 1)[1].split("?")[0])
         if ms:
             buchberger = round(ms / 1000, 1)
     return {"angeles": round(movement["duration"], 1), "buchberger": buchberger}
