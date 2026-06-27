@@ -173,5 +173,8 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Spotify creds
+.spotify-creds
+
 # Web card screenshot output (web/build.sh, web/shot.sh)
 web/screenshot*.png
