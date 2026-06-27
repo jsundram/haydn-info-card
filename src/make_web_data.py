@@ -184,6 +184,9 @@ def make_quartet(q):
         "key_count": q.get("key_count"),
         "mvmts": [m["tempo"] for m in mvmts],
         "measures": [m["measures"] for m in mvmts],
+        # Time signature per movement as [numerator, denominator] (e.g. [2, 4]);
+        # the web card renders it "2/4". Used by the scatterplot's meter filter.
+        "meters": [m["meter"] for m in mvmts],
         # Per-movement {angeles, buchberger} lengths in seconds. Buchberger (the
         # exact linked Spotify track) drives the bar widths; both show in the
         # tooltip. See src/spotify_durations.py for the Buchberger values.
