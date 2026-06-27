@@ -183,7 +183,10 @@
         .axis-title { fill: var(--text-secondary); font-size: 12px; font-weight: 600; }
 
         .dot { cursor: pointer; }
-        .dot:hover { stroke: var(--text-primary); stroke-width: 2px; }
+        /* Only on true hover devices — avoids a sticky hover ring after a tap. */
+        @media (hover: hover) {
+            .dot:hover { stroke: var(--text-primary); stroke-width: 2px; }
+        }
         .hidden { display: none !important; }
 
         /* === OPUS LEGEND === */
@@ -216,6 +219,14 @@
         .tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; }
         .tooltip .tt-row.current { font-weight: 700; }
         .tooltip .tt-dim { opacity: 0.7; }
+        /* Explicit play affordance — the only way to open Spotify on touch. */
+        .tooltip .tt-play {
+            display: inline-block; margin-top: 7px; padding: 4px 9px;
+            background: #1DB954; color: #fff; border-radius: 4px;
+            font-weight: 600; text-decoration: none;
+            pointer-events: auto;   /* tappable even though the tooltip is click-through */
+        }
+        .tooltip .tt-play:hover { background: #1ed760; }
     </style>
 </head>
 <body>
@@ -374,6 +385,20 @@
                 .attr('class', 'tooltip').style('opacity', 0);
             const plot = d3.select('#plot');
 
+            // On touch devices a single tap fires BOTH mouseover and click, which
+            // would pop the tooltip AND open Spotify at once. So on touch a tap only
+            // toggles the tooltip; playing happens via the explicit ▶ link inside it.
+            const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            let activeDot = null;
+            if (isTouch) {
+                // The tooltip stays click-through (pointer-events:none) except its ▶
+                // link, so it never blocks tapping the dots beneath it. A tap on empty
+                // space dismisses; a tap on another dot just shows that one.
+                d3.select('body').on('click.tip', event => {
+                    if (!event.target.closest('.dot') && !event.target.closest('.tt-play')) hideTip();
+                });
+            }
+
             const x = d3.scaleLinear().domain([0, d3.max(points, p => p.bars)]).nice();
             const y = d3.scaleLinear()
                 .domain([0, d3.max(points, p => Math.max(p.buchberger ?? 0, p.angeles ?? 0))])
@@ -431,13 +456,26 @@
                     .attr('cy', p => y(yVal(p)))
                     .attr('fill', fillFor)
                     .attr('fill-opacity', p => shown(p) ? 0.9 : 0.05)
-                    .style('pointer-events', p => shown(p) ? null : 'none')
-                    .on('mouseover', showTip)
-                    .on('mousemove', moveTip)
-                    .on('mouseout', hideTip)
-                    .on('click', (event, p) => {
-                        if (p.track) window.open(p.track, '_blank', 'noopener');
+                    .style('pointer-events', p => shown(p) ? null : 'none');
+                bindDotInteraction(dots);
+            }
+
+            function bindDotInteraction(sel) {
+                if (isTouch) {
+                    // Tap toggles the tooltip; the ▶ link inside it does the playing.
+                    sel.on('click', function (event, p) {
+                        event.stopPropagation();
+                        if (activeDot === this) { hideTip(); }
+                        else { showTip.call(this, event, p); activeDot = this; }
                     });
+                } else {
+                    sel.on('mouseover', showTip)
+                       .on('mousemove', moveTip)
+                       .on('mouseout', hideTip)
+                       .on('click', (event, p) => {
+                           if (p.track) window.open(p.track, '_blank', 'noopener');
+                       });
+                }
             }
 
             function showTip(event, p) {
@@ -461,15 +499,26 @@
                     + row('Angeles', p.angeles, cur === 'angeles')
                     + diffTxt
                     + `</div>`
-                    + (p.track ? `<div class="tt-dim" style="margin-top:4px">click to play ▶</div>` : '')
+                    + (p.track ? `<a class="tt-play" href="${p.track}" target="_blank" rel="noopener">▶ play on Spotify</a>` : '')
                 ).style('opacity', 1);
                 moveTip(event);
             }
             function moveTip(event) {
-                tooltip.style('left', (event.pageX + 14) + 'px')
-                       .style('top', (event.pageY - 10) + 'px');
+                const px = event.pageX ?? event.touches?.[0]?.pageX ?? 0;
+                const py = event.pageY ?? event.touches?.[0]?.pageY ?? 0;
+                const node = tooltip.node();
+                const w = node.offsetWidth, h = node.offsetHeight;
+                // Keep the tooltip on-screen (matters on phones, where a dot near
+                // the right/bottom edge would otherwise push it out of view).
+                let left = px + 14;
+                if (left + w > window.scrollX + document.documentElement.clientWidth - 8) left = px - w - 14;
+                left = Math.max(window.scrollX + 8, left);
+                let top = py - 10;
+                top = Math.min(top, window.scrollY + document.documentElement.clientHeight - h - 8);
+                top = Math.max(window.scrollY + 8, top);
+                tooltip.style('left', left + 'px').style('top', top + 'px');
             }
-            function hideTip() { tooltip.style('opacity', 0); }
+            function hideTip() { tooltip.style('opacity', 0); activeDot = null; }
 
             // ---- recording toggle with a tween on cy ----
             function setRecording(rec) {
