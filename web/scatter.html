@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    Interactive scatterplot of Haydn quartet movements: bars (x) vs duration (y).
+
+    One dot per movement (280 total). Fill = opus color (the same per-opus
+    palette as index.html). Outline = the timing DIFFERENCE between the two
+    recordings (Angeles − Buchberger): red = Angeles slower, blue = Angeles
+    faster. A toggle switches the y-axis between the Buchberger and Angeles
+    durations; dots tween to their new height rather than jumping.
+
+    Data: opera.json (same file the card page uses).
+
+    DARK MODE follows the system preference. Force it for testing:
+        document.documentElement.classList.add('dark-mode')
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haydn Quartets — Movement Scatterplot (bars vs duration)</title>
+    <script src="d3.v7.min.js"></script>
+    <style>
+        :root {
+            --bg-body: #f5f5f5;
+            --bg-panel: #ffffff;
+            --bg-tooltip: rgba(0, 0, 0, 0.9);
+            --text-on-tooltip: #ffffff;
+            --text-primary: #222;
+            --text-secondary: #444;
+            --text-muted: #666;
+            --text-light: #888;
+            --text-link: #2196F3;
+            --axis-line: #999;
+            --axis-grid: rgba(0, 0, 0, 0.07);
+            --dot-stroke-fallback: #888;
+            --control-bg: #ffffff;
+            --control-border: #ccc;
+            --control-active-bg: #333;
+            --control-active-text: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.12);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #1a1a1a;
+                --bg-panel: #242424;
+                --bg-tooltip: rgba(240, 240, 240, 0.96);
+                --text-on-tooltip: #1a1a1a;
+                --text-primary: #f0f0f0;
+                --text-secondary: #d6d6d6;
+                --text-muted: #b0b0b0;
+                --text-light: #888;
+                --text-link: #64B5F6;
+                --axis-line: #777;
+                --axis-grid: rgba(255, 255, 255, 0.09);
+                --dot-stroke-fallback: #777;
+                --control-bg: #2d2d2d;
+                --control-border: #555;
+                --control-active-bg: #e0e0e0;
+                --control-active-text: #1a1a1a;
+                --shadow: rgba(0, 0, 0, 0.45);
+            }
+        }
+        .dark-mode {
+            --bg-body: #1a1a1a; --bg-panel: #242424;
+            --bg-tooltip: rgba(240,240,240,0.96); --text-on-tooltip: #1a1a1a;
+            --text-primary: #f0f0f0; --text-secondary: #d6d6d6; --text-muted: #b0b0b0;
+            --text-light: #888; --text-link: #64B5F6;
+            --axis-line: #777; --axis-grid: rgba(255,255,255,0.09);
+            --dot-stroke-fallback: #777;
+            --control-bg: #2d2d2d; --control-border: #555;
+            --control-active-bg: #e0e0e0; --control-active-text: #1a1a1a;
+            --shadow: rgba(0,0,0,0.45);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 24px 20px 40px;
+        }
+        .wrap { max-width: 1120px; margin: 0 auto; }
+
+        h1 {
+            margin: 0 0 4px 0;
+            font-size: clamp(1.1em, 2.2vw, 1.7em);
+            color: var(--text-secondary);
+        }
+        .subtitle {
+            margin: 0 0 18px 0;
+            font-size: clamp(0.8em, 1vw, 0.95em);
+            color: var(--text-muted);
+        }
+        .subtitle a { color: var(--text-link); text-decoration: none; }
+        .subtitle a:hover { text-decoration: underline; }
+
+        /* === CONTROLS === */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+        .toggle-label { font-size: 0.85em; color: var(--text-muted); margin-right: 2px; }
+        .toggle {
+            display: inline-flex;
+            border: 1px solid var(--control-border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--control-bg);
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+        .toggle button {
+            font: inherit;
+            font-size: 0.85em;
+            padding: 6px 14px;
+            border: none;
+            background: var(--control-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .toggle button + button { border-left: 1px solid var(--control-border); }
+        .toggle button.active {
+            background: var(--control-active-bg);
+            color: var(--control-active-text);
+            font-weight: 600;
+        }
+
+        /* === DIFF LEGEND === */
+        .diff-legend { display: inline-flex; align-items: center; gap: 8px; font-size: 0.78em; color: var(--text-muted); }
+        .diff-legend .bar {
+            width: 130px; height: 12px; border-radius: 2px;
+            border: 1px solid var(--control-border);
+            background: linear-gradient(to right,
+                #2166ac 0%, #d1e5f0 35%, #f7f7f7 50%, #fddbc7 65%, #b2182b 100%);
+        }
+
+        /* === PLOT === */
+        .plot-panel {
+            background: var(--bg-panel);
+            border-radius: 8px;
+            box-shadow: 0 1px 6px var(--shadow);
+            padding: 8px 8px 4px;
+        }
+        svg { display: block; width: 100%; height: auto; }
+        .axis path, .axis line { stroke: var(--axis-line); }
+        .axis text { fill: var(--text-muted); font-size: 11px; }
+        .grid line { stroke: var(--axis-grid); shape-rendering: crispEdges; }
+        .grid path { stroke: none; }
+        .axis-title { fill: var(--text-secondary); font-size: 12px; font-weight: 600; }
+
+        .dot { cursor: pointer; }
+        .dot:hover { stroke: var(--text-primary) !important; stroke-width: 2.5px; }
+
+        /* === OPUS LEGEND === */
+        .opus-legend {
+            display: flex; flex-wrap: wrap; gap: 6px 16px;
+            margin: 16px 2px 0;
+            font-size: 0.76em; color: var(--text-muted);
+        }
+        .opus-legend .item { display: inline-flex; align-items: center; gap: 5px; }
+        .opus-legend .swatch {
+            width: 13px; height: 13px; border-radius: 3px;
+            border: 1px solid var(--control-border);
+        }
+
+        /* === TOOLTIP === */
+        .tooltip {
+            position: absolute;
+            background: var(--bg-tooltip);
+            color: var(--text-on-tooltip);
+            padding: 9px 11px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            line-height: 1.45;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 260px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .tooltip .tt-id { font-weight: 700; }
+        .tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; }
+        .tooltip .tt-row.current { font-weight: 700; }
+        .tooltip .tt-dim { opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>Haydn String Quartets — every movement: bars vs. duration</h1>
+        <p class="subtitle">
+            One dot per movement (280). Fill = opus color; outline = how the two
+            recordings differ in tempo. &middot;
+            <a href="index.html">&larr; back to the card</a>
+        </p>
+
+        <div class="controls">
+            <span class="toggle-label">Duration shown:</span>
+            <div class="toggle" id="toggle">
+                <button data-rec="buchberger" class="active">Buchberger</button>
+                <button data-rec="angeles">Angeles</button>
+            </div>
+            <span class="diff-legend">
+                <span>Angeles faster</span>
+                <span class="bar"></span>
+                <span>Angeles slower</span>
+                <span class="tt-dim">(outline = Angeles − Buchberger)</span>
+            </span>
+        </div>
+
+        <div class="plot-panel">
+            <div id="plot"></div>
+        </div>
+        <div class="opus-legend" id="opus-legend"></div>
+    </div>
+
+    <script>
+        const dataPromise = window.OPERA_DATA
+            ? Promise.resolve(window.OPERA_DATA)
+            : d3.json('opera.json');
+
+        dataPromise.then(operaData => {
+            // ---- flatten to one record per movement ----
+            const points = [];
+            operaData.forEach(opus => {
+                opus.quartets.forEach(q => {
+                    q.mvmts.forEach((tempo, i) => {
+                        const d = q.durations[i] || {};
+                        points.push({
+                            id: q.id,
+                            opusLabel: opus.opus,
+                            color: opus.color || '#888',
+                            tempo,
+                            mvmtNum: (q.mvmtNums && q.mvmtNums[i]) || i + 1,
+                            bars: q.measures[i],
+                            buchberger: d.buchberger,
+                            angeles: d.angeles,
+                            track: (q.tracks && q.tracks[i]) || null,
+                        });
+                    });
+                });
+            });
+            // diff = Angeles − Buchberger (seconds). +ve: Angeles slower (longer).
+            points.forEach(p => {
+                p.diff = (p.angeles != null && p.buchberger != null)
+                    ? p.angeles - p.buchberger : null;
+            });
+
+            const mmss = s => s == null ? '–'
+                : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+
+            let recording = 'buchberger';
+            // y value for a point under the active recording, with a fallback to
+            // the other recording so a missing value never drops the dot.
+            const yVal = p => {
+                const v = p[recording];
+                return v != null ? v : (recording === 'buchberger' ? p.angeles : p.buchberger);
+            };
+
+            // ---- diverging outline scale on the difference ----
+            // Symmetric, clamped so typical differences get strong color while the
+            // few extreme outliers saturate rather than wash everything else out.
+            const CLAMP = 75;
+            const diffColor = d3.scaleDiverging()
+                .domain([CLAMP, 0, -CLAMP])   // +diff (Angeles slower) -> red end
+                .interpolator(d3.interpolateRdBu)
+                .clamp(true);
+            const strokeFor = p => p.diff == null
+                ? 'var(--dot-stroke-fallback)' : diffColor(p.diff);
+
+            // ---- layout / scales (rebuilt on resize) ----
+            const margin = { top: 16, right: 20, bottom: 48, left: 64 };
+            const tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip').style('opacity', 0);
+            const plot = d3.select('#plot');
+
+            const x = d3.scaleLinear().domain([0, d3.max(points, p => p.bars)]).nice();
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(points, p => Math.max(p.buchberger ?? 0, p.angeles ?? 0))])
+                .nice();
+
+            let svg, gPlot, gx, gy, gGridX, gGridY, dots, width, height;
+
+            function build() {
+                plot.selectAll('*').remove();
+                const outerW = Math.max(360, plot.node().clientWidth || 1080);
+                const outerH = Math.round(Math.min(640, Math.max(420, outerW * 0.56)));
+                width = outerW - margin.left - margin.right;
+                height = outerH - margin.top - margin.bottom;
+
+                x.range([0, width]);
+                y.range([height, 0]);
+
+                svg = plot.append('svg')
+                    .attr('viewBox', `0 0 ${outerW} ${outerH}`)
+                    .attr('width', outerW).attr('height', outerH);
+                gPlot = svg.append('g')
+                    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                // gridlines
+                gGridY = gPlot.append('g').attr('class', 'grid');
+                gGridX = gPlot.append('g').attr('class', 'grid')
+                    .attr('transform', `translate(0,${height})`);
+                gGridY.call(d3.axisLeft(y).tickSize(-width).tickFormat(''));
+                gGridX.call(d3.axisBottom(x).tickSize(-height).tickFormat(''));
+
+                // axes
+                gx = gPlot.append('g').attr('class', 'axis')
+                    .attr('transform', `translate(0,${height})`)
+                    .call(d3.axisBottom(x).ticks(10));
+                gy = gPlot.append('g').attr('class', 'axis')
+                    .call(d3.axisLeft(y).ticks(8).tickFormat(mmss));
+
+                // axis titles
+                gPlot.append('text').attr('class', 'axis-title')
+                    .attr('x', width / 2).attr('y', height + 40)
+                    .attr('text-anchor', 'middle')
+                    .text('Number of bars (measures)');
+                gPlot.append('text').attr('class', 'axis-title')
+                    .attr('transform', 'rotate(-90)')
+                    .attr('x', -height / 2).attr('y', -48)
+                    .attr('text-anchor', 'middle')
+                    .text('Duration (m:ss)');
+
+                // dots
+                dots = gPlot.append('g').selectAll('circle')
+                    .data(points).enter().append('circle')
+                    .attr('class', 'dot')
+                    .attr('r', 5)
+                    .attr('cx', p => x(p.bars))
+                    .attr('cy', p => y(yVal(p)))
+                    .attr('fill', p => p.color)
+                    .attr('fill-opacity', 0.82)
+                    .attr('stroke', strokeFor)
+                    .attr('stroke-width', 2)
+                    .on('mouseover', showTip)
+                    .on('mousemove', moveTip)
+                    .on('mouseout', hideTip)
+                    .on('click', (event, p) => {
+                        if (p.track) window.open(p.track, '_blank', 'noopener');
+                    });
+            }
+
+            function showTip(event, p) {
+                const cur = recording;
+                const row = (label, val, isCur) =>
+                    `<div class="tt-row${isCur ? ' current' : ''}">`
+                    + `<span>${label}</span><span>${mmss(val)}</span></div>`;
+                const diffTxt = p.diff == null ? '' :
+                    `<div class="tt-row tt-dim"><span>difference</span><span>`
+                    + `${p.diff > 0 ? '+' : ''}${Math.round(p.diff)}s `
+                    + `(${p.diff > 0 ? 'Angeles slower' : p.diff < 0 ? 'Angeles faster' : 'equal'})`
+                    + `</span></div>`;
+                tooltip.html(
+                    `<div class="tt-id">${p.id} &middot; mvmt ${p.mvmtNum}</div>`
+                    + `<div>${p.tempo}</div>`
+                    + `<div class="tt-dim">${p.bars} bars</div>`
+                    + `<div style="margin-top:5px">`
+                    + row('Buchberger', p.buchberger, cur === 'buchberger')
+                    + row('Angeles', p.angeles, cur === 'angeles')
+                    + diffTxt
+                    + `</div>`
+                    + (p.track ? `<div class="tt-dim" style="margin-top:4px">click to play ▶</div>` : '')
+                ).style('opacity', 1);
+                moveTip(event);
+            }
+            function moveTip(event) {
+                tooltip.style('left', (event.pageX + 14) + 'px')
+                       .style('top', (event.pageY - 10) + 'px');
+            }
+            function hideTip() { tooltip.style('opacity', 0); }
+
+            // ---- recording toggle with a tween on cy ----
+            function setRecording(rec) {
+                if (rec === recording) return;
+                recording = rec;
+                d3.selectAll('#toggle button')
+                    .classed('active', function () { return this.dataset.rec === rec; });
+                dots.transition().duration(900).ease(d3.easeCubicInOut)
+                    .attr('cy', p => y(yVal(p)));
+            }
+            d3.selectAll('#toggle button').on('click', function () {
+                setRecording(this.dataset.rec);
+            });
+
+            // ---- opus legend (per opus block, in render order) ----
+            const legend = d3.select('#opus-legend');
+            operaData.forEach(o => {
+                const item = legend.append('span').attr('class', 'item');
+                item.append('span').attr('class', 'swatch')
+                    .style('background', o.color || '#888');
+                item.append('span').text(`Op. ${o.opus}`);
+            });
+
+            build();
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(build, 150);
+            });
+        }).catch(err => {
+            console.error('Error loading opera.json:', err);
+            d3.select('#plot').append('p').style('color', 'red')
+                .text('Error loading data. Ensure opera.json is in the same directory.');
+        });
+    </script>
+</body>
+</html>
