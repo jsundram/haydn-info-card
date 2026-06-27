@@ -221,9 +221,9 @@
                 <button data-color="opus">Opus</button>
             </div>
             <span class="diff-legend" id="diff-legend">
-                <span>Angeles faster</span>
-                <span class="bar"></span>
                 <span>Angeles slower</span>
+                <span class="bar"></span>
+                <span>Angeles faster</span>
                 <span class="tt-dim">(Angeles − Buchberger)</span>
             </span>
         </div>
@@ -320,7 +320,7 @@
             // ordinary differences saturate toward blue/red instead of washing out.
             const CLAMP = 45;
             const diffColor = d3.scaleDiverging()
-                .domain([CLAMP, 0, -CLAMP])   // +diff (Angeles slower) -> red end
+                .domain([-CLAMP, 0, CLAMP])   // +diff (Angeles slower) -> blue end
                 .interpolator(d3.interpolateRdBu)
                 .clamp(true);
 
