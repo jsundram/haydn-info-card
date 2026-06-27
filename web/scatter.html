@@ -194,13 +194,12 @@
         }
         .hidden { display: none !important; }
 
-        /* === OPUS LEGEND === */
+        /* === OPUS LEGEND === (occupies the same slot as the diff legend) */
         .opus-legend {
-            display: flex; flex-wrap: wrap; gap: 6px 16px;
-            margin: 16px 2px 0;
-            font-size: 0.76em; color: var(--text-muted);
+            display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px 11px;
+            font-size: 0.78em; color: var(--text-muted);
         }
-        .opus-legend .item { display: inline-flex; align-items: center; gap: 5px; }
+        .opus-legend .item { display: inline-flex; align-items: center; gap: 4px; }
         .opus-legend .swatch {
             width: 13px; height: 13px; border-radius: 3px;
             border: 1px solid var(--control-border);
@@ -264,8 +263,7 @@
             .diff-legend .bar { width: 84px; }
             /* Declutter: drop hints and the formula footnote on small screens. */
             .chip-hint, .diff-formula { display: none; }
-
-            .opus-legend { margin-top: 10px; }
+            .opus-legend { font-size: 0.74em; gap: 4px 9px; }
         }
     </style>
 </head>
@@ -302,6 +300,10 @@
                 <span>Angeles faster</span>
                 <span class="tt-dim diff-formula">(Angeles − Buchberger)</span>
             </div>
+            <div class="opus-legend hidden" id="opus-legend">
+                <span class="toggle-label">Opus:</span>
+                <!-- swatch + number per opus injected by JS -->
+            </div>
         </div>
 
         <div class="controls" id="type-filter">
@@ -324,7 +326,6 @@
                 <span class="tt-dim chip-hint">time signature</span>
             </div>
         </div>
-        <div class="opus-legend" id="opus-legend"></div>
     </div>
 
     <script>
@@ -628,13 +629,14 @@
             });
 
             // ---- opus legend (per opus block, in render order) ----
-            // Hidden until "Color by: Opus" is selected, since opus is then the fill.
-            const legend = d3.select('#opus-legend').classed('hidden', true);
+            // Shares the diff legend's slot; shown only in "Color by: Opus". A single
+            // "Opus:" label fronts it, so each item is just a swatch + number.
+            const legend = d3.select('#opus-legend');
             operaData.forEach(o => {
                 const item = legend.append('span').attr('class', 'item');
                 item.append('span').attr('class', 'swatch')
                     .style('background', o.color || '#888');
-                item.append('span').text(`Op. ${o.opus}`);
+                item.append('span').text(o.opus);
             });
 
             build();
