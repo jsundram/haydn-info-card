@@ -130,6 +130,20 @@
             font-weight: 600;
         }
 
+        /* === TYPE FILTER CHIPS === */
+        .chip {
+            font: inherit; font-size: 0.82em; padding: 5px 13px;
+            border: 1px solid var(--control-border); border-radius: 14px;
+            background: var(--control-bg); color: var(--text-secondary);
+            cursor: pointer; transition: opacity .15s, background .15s, color .15s;
+        }
+        .chip:not(.active) { opacity: 0.42; text-decoration: line-through; }
+        .chip.active {
+            background: var(--control-active-bg); color: var(--control-active-text);
+            border-color: var(--control-active-bg); font-weight: 600;
+        }
+        .chip-hint { margin-left: 2px; }
+
         /* === DIFF LEGEND === */
         .diff-legend { display: inline-flex; align-items: center; gap: 8px; font-size: 0.78em; color: var(--text-muted); }
         .diff-legend .bar {
@@ -216,6 +230,15 @@
             </span>
         </div>
 
+        <div class="controls" id="type-filter">
+            <span class="toggle-label">Movement type:</span>
+            <button class="chip active" data-type="Opening">Opening</button>
+            <button class="chip active" data-type="Slow">Slow</button>
+            <button class="chip active" data-type="Menuet">Menuet</button>
+            <button class="chip active" data-type="Finale">Finale</button>
+            <span class="tt-dim chip-hint">click to isolate / hide a type</span>
+        </div>
+
         <div class="plot-panel">
             <div id="plot"></div>
         </div>
@@ -228,10 +251,37 @@
             : d3.json('opera.json');
 
         dataPromise.then(operaData => {
+            // ---- movement-type classification (the four functional slots) ----
+            // Menuet = a movement titled Menuetto/Scherzo; Opening = the first
+            // movement; Finale = the last; Slow = the inner remainder. A quartet
+            // may carry two Menuets (the 5-movement Op. 1 & 2) and the "Slow"
+            // slot is functional — a few are really moderate/fast (see reallySlow).
+            const TYPES = ['Opening', 'Slow', 'Menuet', 'Finale'];
+            const isMenuet = m => { const s = m.toLowerCase(); return s.includes('menuet') || s.includes('scherzo'); };
+            const SLOW_WORDS = ['adagio', 'largo', 'lento', 'grave', 'affettuoso', 'mesto', 'cantabile', 'fantasia', 'innocent'];
+            const reallySlow = m => {
+                const s = m.toLowerCase();
+                if (SLOW_WORDS.some(w => s.includes(w))) return true;
+                return (s.includes('andante') || s.includes('andantino')) && !s.includes('allegr');
+            };
+            const classifyTypes = (mvmts, id) => {
+                const n = mvmts.length, t = new Array(n).fill(null);
+                mvmts.forEach((m, i) => { if (isMenuet(m)) t[i] = 'Menuet'; });
+                // Op. 103 is an unfinished two-movement torso: its Andante grazioso
+                // is the slow movement, not a sonata-allegro opening, and it has no finale.
+                if (id !== '103') {
+                    if (t[0] === null) t[0] = 'Opening';
+                    if (t[n - 1] === null) t[n - 1] = 'Finale';
+                }
+                for (let i = 0; i < n; i++) if (t[i] === null) t[i] = 'Slow';
+                return t;
+            };
+
             // ---- flatten to one record per movement ----
             const points = [];
             operaData.forEach(opus => {
                 opus.quartets.forEach(q => {
+                    const types = classifyTypes(q.mvmts, q.id);
                     q.mvmts.forEach((tempo, i) => {
                         const d = q.durations[i] || {};
                         points.push({
@@ -240,6 +290,8 @@
                             color: opus.color || '#888',
                             tempo,
                             mvmtNum: (q.mvmtNums && q.mvmtNums[i]) || i + 1,
+                            type: types[i],
+                            reallySlow: types[i] === 'Slow' ? reallySlow(tempo) : null,
                             bars: q.measures[i],
                             buchberger: d.buchberger,
                             angeles: d.angeles,
@@ -278,6 +330,10 @@
             const fillFor = p => colorMode === 'opus'
                 ? p.color
                 : (p.diff == null ? '#888' : diffColor(p.diff));
+
+            // ---- movement-type filter state ----
+            const visibleTypes = new Set(TYPES);
+            const shown = p => visibleTypes.has(p.type);
 
             // ---- layout / scales (rebuilt on resize) ----
             const margin = { top: 16, right: 20, bottom: 48, left: 64 };
@@ -341,7 +397,8 @@
                     .attr('cx', p => x(p.bars))
                     .attr('cy', p => y(yVal(p)))
                     .attr('fill', fillFor)
-                    .attr('fill-opacity', 0.9)
+                    .attr('fill-opacity', p => shown(p) ? 0.9 : 0.05)
+                    .style('pointer-events', p => shown(p) ? null : 'none')
                     .on('mouseover', showTip)
                     .on('mousemove', moveTip)
                     .on('mouseout', hideTip)
@@ -360,8 +417,10 @@
                     + `${p.diff > 0 ? '+' : ''}${Math.round(p.diff)}s `
                     + `(${p.diff > 0 ? 'Angeles slower' : p.diff < 0 ? 'Angeles faster' : 'equal'})`
                     + `</span></div>`;
+                const typeLabel = p.type
+                    + (p.type === 'Slow' && p.reallySlow === false ? ' slot (moderate tempo)' : '');
                 tooltip.html(
-                    `<div class="tt-id">${p.id} &middot; mvmt ${p.mvmtNum}</div>`
+                    `<div class="tt-id">${p.id} &middot; mvmt ${p.mvmtNum} &middot; ${typeLabel}</div>`
                     + `<div>${p.tempo}</div>`
                     + `<div class="tt-dim">${p.bars} bars</div>`
                     + `<div style="margin-top:5px">`
@@ -404,6 +463,19 @@
             }
             d3.selectAll('#color-toggle button').on('click', function () {
                 setColorMode(this.dataset.color);
+            });
+
+            // ---- movement-type filter: fade out deselected types ----
+            function applyFilter() {
+                dots.transition().duration(400)
+                    .attr('fill-opacity', p => shown(p) ? 0.9 : 0.05);
+                dots.style('pointer-events', p => shown(p) ? null : 'none');
+            }
+            d3.selectAll('#type-filter .chip').on('click', function () {
+                const t = this.dataset.type;
+                if (visibleTypes.has(t)) visibleTypes.delete(t); else visibleTypes.add(t);
+                d3.select(this).classed('active', visibleTypes.has(t));
+                applyFilter();
             });
 
             // ---- opus legend (per opus block, in render order) ----
