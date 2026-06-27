@@ -33,6 +33,7 @@
             --axis-line: #999;
             --axis-grid: rgba(0, 0, 0, 0.07);
             --dot-stroke-fallback: #888;
+            --dot-ring: rgba(40, 40, 40, 0.5);
             --control-bg: #ffffff;
             --control-border: #ccc;
             --control-active-bg: #333;
@@ -53,6 +54,7 @@
                 --axis-line: #777;
                 --axis-grid: rgba(255, 255, 255, 0.09);
                 --dot-stroke-fallback: #777;
+                --dot-ring: rgba(235, 235, 235, 0.55);
                 --control-bg: #2d2d2d;
                 --control-border: #555;
                 --control-active-bg: #e0e0e0;
@@ -66,7 +68,7 @@
             --text-primary: #f0f0f0; --text-secondary: #d6d6d6; --text-muted: #b0b0b0;
             --text-light: #888; --text-link: #64B5F6;
             --axis-line: #777; --axis-grid: rgba(255,255,255,0.09);
-            --dot-stroke-fallback: #777;
+            --dot-stroke-fallback: #777; --dot-ring: rgba(235,235,235,0.55);
             --control-bg: #2d2d2d; --control-border: #555;
             --control-active-bg: #e0e0e0; --control-active-text: #1a1a1a;
             --shadow: rgba(0,0,0,0.45);
@@ -151,8 +153,9 @@
         .grid path { stroke: none; }
         .axis-title { fill: var(--text-secondary); font-size: 12px; font-weight: 600; }
 
-        .dot { cursor: pointer; }
+        .dot { cursor: pointer; stroke: var(--dot-ring); stroke-width: 1.3px; }
         .dot:hover { stroke: var(--text-primary) !important; stroke-width: 2.5px; }
+        .hidden { display: none !important; }
 
         /* === OPUS LEGEND === */
         .opus-legend {
@@ -190,22 +193,26 @@
     <div class="wrap">
         <h1>Haydn String Quartets — every movement: bars vs. duration</h1>
         <p class="subtitle">
-            One dot per movement (280). Fill = how the two recordings differ in
-            tempo; ring = opus color. &middot;
+            One dot per movement (280). &middot;
             <a href="index.html">&larr; back to the card</a>
         </p>
 
         <div class="controls">
-            <span class="toggle-label">Duration shown:</span>
+            <span class="toggle-label">Duration:</span>
             <div class="toggle" id="toggle">
                 <button data-rec="buchberger" class="active">Buchberger</button>
                 <button data-rec="angeles">Angeles</button>
             </div>
-            <span class="diff-legend">
+            <span class="toggle-label">Color by:</span>
+            <div class="toggle" id="color-toggle">
+                <button data-color="diff" class="active">Tempo difference</button>
+                <button data-color="opus">Opus</button>
+            </div>
+            <span class="diff-legend" id="diff-legend">
                 <span>Angeles faster</span>
                 <span class="bar"></span>
                 <span>Angeles slower</span>
-                <span class="tt-dim">(fill = Angeles − Buchberger)</span>
+                <span class="tt-dim">(Angeles − Buchberger)</span>
             </span>
         </div>
 
@@ -258,17 +265,19 @@
                 return v != null ? v : (recording === 'buchberger' ? p.angeles : p.buchberger);
             };
 
-            // ---- diverging outline scale on the difference ----
-            // Symmetric, clamped so typical differences get strong color while the
-            // few extreme outliers saturate rather than wash everything else out.
-            const CLAMP = 75;
+            // ---- two fill encodings, switched by the color toggle ----
+            // Diverging scale on the timing difference. Clamp near ±1 SD (~45s) so
+            // ordinary differences saturate toward blue/red instead of washing out.
+            const CLAMP = 45;
             const diffColor = d3.scaleDiverging()
                 .domain([CLAMP, 0, -CLAMP])   // +diff (Angeles slower) -> red end
                 .interpolator(d3.interpolateRdBu)
                 .clamp(true);
-            // fill = the timing difference (the diverging scale reads best as the
-            // dominant channel); the opus color moves to the ring.
-            const fillFor = p => p.diff == null ? '#888' : diffColor(p.diff);
+
+            let colorMode = 'diff';           // 'diff' | 'opus'
+            const fillFor = p => colorMode === 'opus'
+                ? p.color
+                : (p.diff == null ? '#888' : diffColor(p.diff));
 
             // ---- layout / scales (rebuilt on resize) ----
             const margin = { top: 16, right: 20, bottom: 48, left: 64 };
@@ -333,8 +342,6 @@
                     .attr('cy', p => y(yVal(p)))
                     .attr('fill', fillFor)
                     .attr('fill-opacity', 0.9)
-                    .attr('stroke', p => p.color)
-                    .attr('stroke-width', 2.5)
                     .on('mouseover', showTip)
                     .on('mousemove', moveTip)
                     .on('mouseout', hideTip)
@@ -385,14 +392,27 @@
                 setRecording(this.dataset.rec);
             });
 
+            // ---- color-mode toggle: tween the fill, swap the legend ----
+            function setColorMode(mode) {
+                if (mode === colorMode) return;
+                colorMode = mode;
+                d3.selectAll('#color-toggle button')
+                    .classed('active', function () { return this.dataset.color === mode; });
+                dots.transition().duration(500).attr('fill', fillFor);
+                d3.select('#diff-legend').classed('hidden', mode !== 'diff');
+                d3.select('#opus-legend').classed('hidden', mode !== 'opus');
+            }
+            d3.selectAll('#color-toggle button').on('click', function () {
+                setColorMode(this.dataset.color);
+            });
+
             // ---- opus legend (per opus block, in render order) ----
-            const legend = d3.select('#opus-legend');
+            // Hidden until "Color by: Opus" is selected, since opus is then the fill.
+            const legend = d3.select('#opus-legend').classed('hidden', true);
             operaData.forEach(o => {
                 const item = legend.append('span').attr('class', 'item');
-                // ring swatch — mirrors the dot's opus-colored outline
                 item.append('span').attr('class', 'swatch')
-                    .style('background', 'transparent')
-                    .style('border', `3px solid ${o.color || '#888'}`);
+                    .style('background', o.color || '#888');
                 item.append('span').text(`Op. ${o.opus}`);
             });
 
