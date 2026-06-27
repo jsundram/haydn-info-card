@@ -287,15 +287,15 @@
         "durations": [
           {
             "angeles": 252.5,
-            "buchberger": 264.7
-          },
-          {
-            "angeles": 216.1,
             "buchberger": 233.6
           },
           {
-            "angeles": 308.6,
+            "angeles": 216.1,
             "buchberger": 228.5
+          },
+          {
+            "angeles": 308.6,
+            "buchberger": 264.7
           },
           {
             "angeles": 217.5,
@@ -314,9 +314,9 @@
           5
         ],
         "tracks": [
-          "https://open.spotify.com/track/2jEmQqKFNl7yyaz0KrOFTr",
           "https://open.spotify.com/track/2yHMYT2oVr8YmtPjfmkxD6",
           "https://open.spotify.com/track/0JUxKTwZXrpQeIwZG1BjXN",
+          "https://open.spotify.com/track/2jEmQqKFNl7yyaz0KrOFTr",
           "https://open.spotify.com/track/4Xf16k4NZ69XKuWHFJGRUb",
           "https://open.spotify.com/track/6xqzks2ppKzNKdzXHvXCxc"
         ]
@@ -1634,19 +1634,19 @@
         "durations": [
           {
             "angeles": 393.7,
-            "buchberger": 181.5
-          },
-          {
-            "angeles": 404.1,
             "buchberger": 332.9
           },
           {
-            "angeles": 147.9,
+            "angeles": 404.1,
             "buchberger": 326.8
           },
           {
-            "angeles": 189.5,
+            "angeles": 147.9,
             "buchberger": 148.7
+          },
+          {
+            "angeles": 189.5,
+            "buchberger": 181.5
           }
         ],
         "mvmtNums": [
@@ -1656,10 +1656,10 @@
           4
         ],
         "tracks": [
-          "https://open.spotify.com/track/0IJ4wD3UTO7QzyarqbkVar",
           "https://open.spotify.com/track/7AkjScQrJwU8ADQoK8XGwM",
           "https://open.spotify.com/track/0n7cr1I70ro4kgH2n6osq1",
-          "https://open.spotify.com/track/58Wvl7G4z826knMnwFpvi2"
+          "https://open.spotify.com/track/58Wvl7G4z826knMnwFpvi2",
+          "https://open.spotify.com/track/0IJ4wD3UTO7QzyarqbkVar"
         ]
       }
     ]

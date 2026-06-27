@@ -150,15 +150,16 @@ def column(opus, number):
     return number
 
 
-def movement_durations(movement, url):
+def movement_durations(movement, quartet_id):
     """Per-movement length in seconds for both recorded performances:
     {"angeles": <local recording>, "buchberger": <exact linked Spotify track>}.
     buchberger is None if the movement has no linked track."""
     buchberger = None
-    if url and "/track/" in url:
-        ms = SPOTIFY_DUR.get(url.rsplit("/track/", 1)[1].split("?")[0])
-        if ms:
-            buchberger = round(ms / 1000, 1)
+    mvmt_id = "%sm%d" % (quartet_id, movement["mvmt"])
+    entry = SPOTIFY_DUR.get(mvmt_id)
+    if entry:
+        ms = entry["duration_ms"] if isinstance(entry, dict) else entry
+        buchberger = round(ms / 1000, 1)
     return {"angeles": round(movement["duration"], 1), "buchberger": buchberger}
 
 
@@ -186,7 +187,7 @@ def make_quartet(q):
         # Per-movement {angeles, buchberger} lengths in seconds. Buchberger (the
         # exact linked Spotify track) drives the bar widths; both show in the
         # tooltip. See src/spotify_durations.py for the Buchberger values.
-        "durations": [movement_durations(m, t) for m, t in zip(mvmts, tracks)],
+        "durations": [movement_durations(m, q["ID"]) for m in mvmts],
         # Real movement numbers — Op. 103 only preserves movements 2 and 3.
         "mvmtNums": [m["mvmt"] for m in mvmts],
     }
