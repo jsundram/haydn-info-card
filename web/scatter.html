@@ -244,8 +244,10 @@
             .plot-panel { padding: 4px 2px 2px; margin-bottom: 14px; }
 
             /* One control group per row; never wrap — scroll sideways if it can't
-               fit, so each "option set" always reads as a single line. */
-            .controls { flex-direction: column; align-items: stretch; gap: 9px; margin-bottom: 0; }
+               fit, so each "option set" always reads as a single line. gap spaces
+               groups *within* a .controls block; margin-bottom spaces the separate
+               blocks (Duration/Color, Movement type, Meter) so their chips don't abut. */
+            .controls { flex-direction: column; align-items: stretch; gap: 11px; margin-bottom: 11px; }
             .control-group {
                 flex-wrap: nowrap; overflow-x: auto;
                 -webkit-overflow-scrolling: touch; scrollbar-width: none;
