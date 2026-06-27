@@ -26,9 +26,21 @@ DEFAULT_SPOTIFY = ("../quartet-chooser/.sheet_cache/"
 # (opus, work, mvmt) -> spotify url, populated in main() if the sheet is found.
 SPOTIFY = {}
 
-# track_id -> duration_ms, from data/spotify_durations.json (exact linked-track
-# lengths fetched by src/spotify_durations.py). Overlays the Angeles durations.
+# movement_id -> {duration_ms, track_id}, from data/spotify_durations.json (exact
+# linked-track lengths fetched by src/spotify_durations.py). This committed cache
+# carries the Spotify track_id per movement, so it is the primary source for the
+# clickable track links too (the movements sheet is only a fallback) — a clickable
+# URL is just this fixed prefix + the track_id.
 SPOTIFY_DUR = {}
+SPOTIFY_TRACK_URL = "https://open.spotify.com/track/%s"
+
+
+def track_url(quartet_id, mvmt):
+    """Clickable Spotify URL for a movement from the committed durations cache,
+    or None if the cache has no track_id for it."""
+    entry = SPOTIFY_DUR.get("%sm%d" % (quartet_id, mvmt))
+    track_id = entry.get("track_id") if isinstance(entry, dict) else None
+    return SPOTIFY_TRACK_URL % track_id if track_id else None
 
 
 def load_spotify(path):
@@ -169,7 +181,10 @@ def make_quartet(q):
     number = q.get("#")
     mvmts = ordered_movements(q)
     work = "" if number is None else str(number)
-    tracks = [SPOTIFY.get((q["opus"], work, str(m["mvmt"]))) for m in mvmts]
+    # Prefer the committed durations cache (carries the track_id); fall back to
+    # the optional movements sheet for any movement the cache doesn't cover.
+    tracks = [track_url(q["ID"], m["mvmt"]) or SPOTIFY.get((q["opus"], work, str(m["mvmt"])))
+              for m in mvmts]
     quartet = {
         "id": q["ID"],
         "opus": q["opus"],
