@@ -12,6 +12,9 @@ cd "$ROOT"
 echo "==> data: web/opera.json"
 uv run src/make_web_data.py -o web/opera.json
 
+echo "==> share-sheet previews: web/{index,scatter}-preview.png"
+uv run src/og_preview.py
+
 echo "==> screenshot: iPhone (retina, full page)"
 uv run src/screenshot.py -o web/screenshot-iphone.png
 
