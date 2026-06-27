@@ -76,10 +76,8 @@ columns (`column()`), nickname Title-casing, and the Spotify join all live in
 `src/make_web_data.py`. Spotify **track links** are built from the committed
 durations cache (`data/spotify_durations.json`), which carries a `track_id` per
 movement — a clickable URL is just `https://open.spotify.com/track/<track_id>`.
-So the build is self-contained and reproduces `tracks` for all 280 movements
-without any sibling repo. The quartetroulette movements sheet (sibling repo:
-`../quartet-chooser/.sheet_cache/… - The Movements.json`, the `--spotify`
-default) is now only a fallback for any movement the cache doesn't cover.
+The build is fully self-contained: it depends only on committed data and
+reproduces `tracks` for all 280 movements with no sibling repository.
 
 **Movement durations** (which drive the bar widths) are the exact lengths of the
 linked Spotify tracks, cached in `data/spotify_durations.json` (committed).

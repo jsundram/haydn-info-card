@@ -19,18 +19,11 @@ import os
 import read as Quartets
 
 
-# quartetroulette's movements sheet carries a Spotify Track ID per movement.
-DEFAULT_SPOTIFY = ("../quartet-chooser/.sheet_cache/"
-    "1Q9MVjq5rOm-vZsfmm1ACg47Q4086W_8Obvn2UqjvrP4 - The Movements.json")
-
-# (opus, work, mvmt) -> spotify url, populated in main() if the sheet is found.
-SPOTIFY = {}
-
 # movement_id -> {duration_ms, track_id}, from data/spotify_durations.json (exact
 # linked-track lengths fetched by src/spotify_durations.py). This committed cache
-# carries the Spotify track_id per movement, so it is the primary source for the
-# clickable track links too (the movements sheet is only a fallback) — a clickable
-# URL is just this fixed prefix + the track_id.
+# carries the Spotify track_id per movement, so it is the sole source for the
+# clickable track links too — a clickable URL is just this fixed prefix + the
+# track_id. The build needs no sibling repository.
 SPOTIFY_DUR = {}
 SPOTIFY_TRACK_URL = "https://open.spotify.com/track/%s"
 
@@ -41,27 +34,6 @@ def track_url(quartet_id, mvmt):
     entry = SPOTIFY_DUR.get("%sm%d" % (quartet_id, mvmt))
     track_id = entry.get("track_id") if isinstance(entry, dict) else None
     return SPOTIFY_TRACK_URL % track_id if track_id else None
-
-
-def load_spotify(path):
-    """Map (opus:int, work:str, mvmt:str) -> spotify url from the movements sheet.
-
-    Work number is '' for the single-quartet opera (42, 103), matching how those
-    quartets carry no '#'. Returns {} (no links) if the sheet isn't present.
-    """
-    if not path or not os.path.exists(path):
-        return {}
-    rows = json.load(open(path))
-    header = rows[0]
-    col = {k: i for i, k in enumerate(header)}
-    get = lambda r, k: (r[col[k]] if col[k] < len(r) else "").strip()
-    out = {}
-    for r in rows[1:]:
-        if get(r, "Composer") != "Haydn":
-            continue
-        opus = int(get(r, "Catalog Number").replace("Opus ", ""))
-        out[(opus, get(r, "Work Number"), get(r, "Movement Number"))] = get(r, "Spotify Track ID")
-    return out
 
 
 # Layout: each row is a list of "blocks"; a block is a list of opus numbers.
@@ -180,11 +152,8 @@ def make_quartet(q):
     hob = q.get("hoboken")
     number = q.get("#")
     mvmts = ordered_movements(q)
-    work = "" if number is None else str(number)
-    # Prefer the committed durations cache (carries the track_id); fall back to
-    # the optional movements sheet for any movement the cache doesn't cover.
-    tracks = [track_url(q["ID"], m["mvmt"]) or SPOTIFY.get((q["opus"], work, str(m["mvmt"])))
-              for m in mvmts]
+    # Clickable Spotify links, built from the committed durations cache.
+    tracks = [track_url(q["ID"], m["mvmt"]) for m in mvmts]
     quartet = {
         "id": q["ID"],
         "opus": q["opus"],
@@ -218,16 +187,12 @@ def make_quartet(q):
 @click.option("-o", "--outfile", type=click.Path(writable=True), required=True, help="output json (e.g. web/opera.json)")
 @click.option("-c", "--color-json", default="./colors/sashamaps.json", help="json file specifying colors (read.py needs it)")
 @click.option("-d", "--datadir", default="./data", help="data directory")
-@click.option("-s", "--spotify", default=DEFAULT_SPOTIFY, help="quartetroulette movements sheet (for Spotify links)")
-def main(outfile, color_json, datadir, spotify):
-    global SPOTIFY, SPOTIFY_DUR
-    SPOTIFY = load_spotify(spotify)
-    print("spotify: %d movement links" % len(SPOTIFY) if SPOTIFY
-          else "spotify: sheet not found (%s) — no links" % spotify)
+def main(outfile, color_json, datadir):
+    global SPOTIFY_DUR
     dur_path = os.path.join(datadir, "spotify_durations.json")
     if os.path.exists(dur_path):
         SPOTIFY_DUR = json.load(open(dur_path))
-        print("spotify: %d exact track durations" % len(SPOTIFY_DUR))
+        print("spotify: %d exact track durations + links" % len(SPOTIFY_DUR))
     quartets = Quartets.get_data(data_dir=datadir, colorf=color_json, extend=False)
     by_opus = {}
     for q in quartets:
