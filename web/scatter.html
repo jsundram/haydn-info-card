@@ -33,7 +33,6 @@
             --axis-line: #999;
             --axis-grid: rgba(0, 0, 0, 0.07);
             --dot-stroke-fallback: #888;
-            --dot-ring: rgba(40, 40, 40, 0.5);
             --control-bg: #ffffff;
             --control-border: #ccc;
             --control-active-bg: #333;
@@ -54,7 +53,6 @@
                 --axis-line: #777;
                 --axis-grid: rgba(255, 255, 255, 0.09);
                 --dot-stroke-fallback: #777;
-                --dot-ring: rgba(235, 235, 235, 0.55);
                 --control-bg: #2d2d2d;
                 --control-border: #555;
                 --control-active-bg: #e0e0e0;
@@ -68,7 +66,7 @@
             --text-primary: #f0f0f0; --text-secondary: #d6d6d6; --text-muted: #b0b0b0;
             --text-light: #888; --text-link: #64B5F6;
             --axis-line: #777; --axis-grid: rgba(255,255,255,0.09);
-            --dot-stroke-fallback: #777; --dot-ring: rgba(235,235,235,0.55);
+            --dot-stroke-fallback: #777;
             --control-bg: #2d2d2d; --control-border: #555;
             --control-active-bg: #e0e0e0; --control-active-text: #1a1a1a;
             --shadow: rgba(0,0,0,0.45);
@@ -167,8 +165,8 @@
         .grid path { stroke: none; }
         .axis-title { fill: var(--text-secondary); font-size: 12px; font-weight: 600; }
 
-        .dot { cursor: pointer; stroke: var(--dot-ring); stroke-width: 1.3px; }
-        .dot:hover { stroke: var(--text-primary) !important; stroke-width: 2.5px; }
+        .dot { cursor: pointer; }
+        .dot:hover { stroke: var(--text-primary); stroke-width: 2px; }
         .hidden { display: none !important; }
 
         /* === OPUS LEGEND === */
