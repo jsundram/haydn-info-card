@@ -178,3 +178,12 @@ cython_debug/
 
 # Web card screenshot output (web/build.sh, web/shot.sh)
 web/screenshot*.png
+
+# Intermediate / experimental build artifacts in output/
+# (final deliverables are committed as "Haydn Info Card - Sundram - <date>.pdf")
+output/annotation.pdf
+output/front.pdf
+output/front-dark.pdf
+output/timeline_v.pdf
+output/timeline_vertical.svg
+output/*.mp4
