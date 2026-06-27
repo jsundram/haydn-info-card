@@ -80,12 +80,19 @@ The build is fully self-contained: it depends only on committed data and
 reproduces `tracks` for all 280 movements with no sibling repository.
 
 **Movement durations** (which drive the bar widths) are the exact lengths of the
-linked Spotify tracks, cached in `data/spotify_durations.json` (committed).
-Regenerate that cache only when the track links change:
+linked Spotify tracks, cached in `data/spotify_durations.json` (committed). That
+file is the **source of truth** for the per-movement track links: it maps each
+movement ID to `{track_id, duration_ms}`, and `make_web_data.py` derives both the
+clickable `tracks` and the Buchberger durations in `opera.json` from it. The flow
+is one-way (cache → `opera.json`), so there's no cycle. To **add or change a
+linked recording**, edit its `track_id` here, then refresh durations:
 
 ```sh
 SPOTIFY_CLIENT_ID=… SPOTIFY_CLIENT_SECRET=… uv run src/spotify_durations.py
 ```
+
+This reads the cache's own `track_id`s, refetches each `duration_ms`, and writes
+the file back — it no longer reads `opera.json`.
 
 Credentials live in the [Spotify dashboard](https://developer.spotify.com/dashboard/9c4d88ab97ac4bb7979f398627c764c3)
 (client-credentials flow, no user login). They're read from the env and never
