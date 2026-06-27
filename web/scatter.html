@@ -237,6 +237,11 @@
             <span class="tt-dim chip-hint">click to isolate / hide a type</span>
         </div>
 
+        <div class="controls" id="meter-filter">
+            <span class="toggle-label">Meter:</span>
+            <!-- meter chips injected by JS, sorted by largest denominator first -->
+        </div>
+
         <div class="plot-panel">
             <div id="plot"></div>
         </div>
@@ -282,6 +287,7 @@
                     const types = classifyTypes(q.mvmts, q.id);
                     q.mvmts.forEach((tempo, i) => {
                         const d = q.durations[i] || {};
+                        const met = q.meters && q.meters[i];   // [numerator, denominator]
                         points.push({
                             id: q.id,
                             opusLabel: opus.opus,
@@ -290,6 +296,9 @@
                             mvmtNum: (q.mvmtNums && q.mvmtNums[i]) || i + 1,
                             type: types[i],
                             reallySlow: types[i] === 'Slow' ? reallySlow(tempo) : null,
+                            meter: met ? `${met[0]}/${met[1]}` : null,
+                            meterNum: met ? met[0] : null,
+                            meterDen: met ? met[1] : null,
                             bars: q.measures[i],
                             buchberger: d.buchberger,
                             angeles: d.angeles,
@@ -329,9 +338,18 @@
                 ? p.color
                 : (p.diff == null ? '#888' : diffColor(p.diff));
 
-            // ---- movement-type filter state ----
+            // ---- filter state (movement type AND meter, combined) ----
             const visibleTypes = new Set(TYPES);
-            const shown = p => visibleTypes.has(p.type);
+            // Distinct meters present, sorted by largest denominator first, then
+            // by numerator (e.g. 3/8, 6/8, 2/4, 3/4, 4/4, 2/2).
+            const meterOrder = [...new Set(points.filter(p => p.meter).map(p => p.meter))]
+                .sort((a, b) => {
+                    const [an, ad] = a.split('/').map(Number), [bn, bd] = b.split('/').map(Number);
+                    return bd - ad || an - bn;
+                });
+            const visibleMeters = new Set(meterOrder);
+            const shown = p => visibleTypes.has(p.type)
+                && (p.meter == null || visibleMeters.has(p.meter));
 
             // ---- layout / scales (rebuilt on resize) ----
             const margin = { top: 16, right: 20, bottom: 48, left: 64 };
@@ -420,7 +438,7 @@
                 tooltip.html(
                     `<div class="tt-id">${p.id} &middot; mvmt ${p.mvmtNum} &middot; ${typeLabel}</div>`
                     + `<div>${p.tempo}</div>`
-                    + `<div class="tt-dim">${p.bars} bars</div>`
+                    + `<div class="tt-dim">${p.bars} bars${p.meter ? ` &middot; ${p.meter}` : ''}</div>`
                     + `<div style="margin-top:5px">`
                     + row('Buchberger', p.buchberger, cur === 'buchberger')
                     + row('Angeles', p.angeles, cur === 'angeles')
@@ -475,6 +493,22 @@
                 d3.select(this).classed('active', visibleTypes.has(t));
                 applyFilter();
             });
+
+            // ---- meter filter (chips built from the data, sorted by denominator) ----
+            const meterRow = d3.select('#meter-filter');
+            meterOrder.forEach(m => {
+                meterRow.append('button')
+                    .attr('class', 'chip active')
+                    .attr('data-meter', m)
+                    .text(m)
+                    .on('click', function () {
+                        if (visibleMeters.has(m)) visibleMeters.delete(m); else visibleMeters.add(m);
+                        d3.select(this).classed('active', visibleMeters.has(m));
+                        applyFilter();
+                    });
+            });
+            meterRow.append('span').attr('class', 'tt-dim chip-hint')
+                .text('time signature');
 
             // ---- opus legend (per opus block, in render order) ----
             // Hidden until "Color by: Opus" is selected, since opus is then the fill.
