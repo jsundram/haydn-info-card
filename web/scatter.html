@@ -119,6 +119,10 @@
             gap: 18px;
             margin-bottom: 14px;
         }
+        /* A self-contained labelled control (one toggle / one chip set), so it can
+           be kept on a single line and stacked per-row on narrow screens. */
+        .control-group { display: inline-flex; align-items: center; gap: 8px; }
+        .chips { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
         .toggle-label { font-size: 0.85em; color: var(--text-muted); margin-right: 2px; }
         .toggle {
             display: inline-flex;
@@ -174,6 +178,7 @@
             border-radius: 8px;
             box-shadow: 0 1px 6px var(--shadow);
             padding: 8px 8px 4px;
+            margin-bottom: 16px;   /* chart sits above the controls */
         }
         svg { display: block; width: 100%; height: auto; }
         .axis path, .axis line { stroke: var(--axis-line); }
@@ -227,6 +232,37 @@
             pointer-events: auto;   /* tappable even though the tooltip is click-through */
         }
         .tooltip .tt-play:hover { background: #1ed760; }
+
+        /* === MOBILE === */
+        @media (max-width: 640px) {
+            body { padding: 12px 8px 24px; }
+            .wrap { max-width: none; }
+            h1 { font-size: 1.18em; line-height: 1.25; }
+            .subtitle { font-size: 0.85em; margin-bottom: 12px; }
+
+            /* Reclaim the side whitespace so the chart spans the screen. */
+            .plot-panel { padding: 4px 2px 2px; margin-bottom: 14px; }
+
+            /* One control group per row; never wrap — scroll sideways if it can't
+               fit, so each "option set" always reads as a single line. */
+            .controls { flex-direction: column; align-items: stretch; gap: 9px; margin-bottom: 0; }
+            .control-group {
+                flex-wrap: nowrap; overflow-x: auto;
+                -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            }
+            .control-group::-webkit-scrollbar { display: none; }
+            .chips { flex-wrap: nowrap; }
+            .toggle-label, .toggle, .toggle button, .chip { flex: 0 0 auto; }
+            .toggle-label { font-size: 0.78em; }
+            .toggle button { font-size: 0.78em; padding: 6px 10px; }
+            .chip { font-size: 0.78em; padding: 6px 11px; }
+            .diff-legend { font-size: 0.72em; }
+            .diff-legend .bar { width: 84px; }
+            /* Declutter: drop hints and the formula footnote on small screens. */
+            .chip-hint, .diff-formula { display: none; }
+
+            .opus-legend { margin-top: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -237,41 +273,52 @@
             <a href="index.html">&larr; back to the card</a>
         </p>
 
+        <div class="plot-panel">
+            <div id="plot"></div>
+        </div>
+
         <div class="controls">
-            <span class="toggle-label">Duration:</span>
-            <div class="toggle" id="toggle">
-                <button data-rec="buchberger" class="active">Buchberger</button>
-                <button data-rec="angeles">Angeles</button>
+            <div class="control-group">
+                <span class="toggle-label">Duration:</span>
+                <div class="toggle" id="toggle">
+                    <button data-rec="buchberger" class="active">Buchberger</button>
+                    <button data-rec="angeles">Angeles</button>
+                </div>
             </div>
-            <span class="toggle-label">Color by:</span>
-            <div class="toggle" id="color-toggle">
-                <button data-color="diff" class="active">Tempo difference</button>
-                <button data-color="opus">Opus</button>
+            <div class="control-group">
+                <span class="toggle-label">Color by:</span>
+                <div class="toggle" id="color-toggle">
+                    <button data-color="diff" class="active">Tempo difference</button>
+                    <button data-color="opus">Opus</button>
+                </div>
             </div>
-            <span class="diff-legend" id="diff-legend">
+            <div class="control-group diff-legend" id="diff-legend">
                 <span>Angeles slower</span>
                 <span class="bar"></span>
                 <span>Angeles faster</span>
-                <span class="tt-dim">(Angeles − Buchberger)</span>
-            </span>
+                <span class="tt-dim diff-formula">(Angeles − Buchberger)</span>
+            </div>
         </div>
 
         <div class="controls" id="type-filter">
-            <span class="toggle-label">Movement type:</span>
-            <button class="chip active" data-type="Opening">Opening</button>
-            <button class="chip active" data-type="Slow">Slow</button>
-            <button class="chip active" data-type="Menuet">Menuet</button>
-            <button class="chip active" data-type="Finale">Finale</button>
-            <span class="tt-dim chip-hint">click to isolate / hide a type</span>
+            <div class="control-group">
+                <span class="toggle-label">Movement type:</span>
+                <span class="chips">
+                    <button class="chip active" data-type="Opening">Opening</button>
+                    <button class="chip active" data-type="Slow">Slow</button>
+                    <button class="chip active" data-type="Menuet">Menuet</button>
+                    <button class="chip active" data-type="Finale">Finale</button>
+                </span>
+                <span class="tt-dim chip-hint">click to isolate / hide a type</span>
+            </div>
         </div>
 
         <div class="controls" id="meter-filter">
-            <span class="toggle-label">Meter:</span>
-            <!-- meter chips injected by JS, sorted by largest denominator first -->
-        </div>
-
-        <div class="plot-panel">
-            <div id="plot"></div>
+            <div class="control-group">
+                <span class="toggle-label">Meter:</span>
+                <span class="chips" id="meter-chips"><!-- chips injected by JS, largest denominator first --></span>
+                <span class="tt-dim chip-hint">time signature</span>
+            </div>
         </div>
         <div class="opus-legend" id="opus-legend"></div>
     </div>
@@ -408,8 +455,10 @@
 
             function build() {
                 plot.selectAll('*').remove();
-                const outerW = Math.max(360, plot.node().clientWidth || 1080);
-                const outerH = Math.round(Math.min(640, Math.max(420, outerW * 0.56)));
+                const outerW = Math.max(320, plot.node().clientWidth || 1080);
+                const isNarrow = outerW < 640;
+                // Taller (more portrait) on phones so 280 dots spread out and stay tappable.
+                const outerH = Math.round(Math.min(640, Math.max(isNarrow ? 480 : 420, outerW * 0.56)));
                 width = outerW - margin.left - margin.right;
                 height = outerH - margin.top - margin.bottom;
 
@@ -451,7 +500,7 @@
                 dots = gPlot.append('g').selectAll('circle')
                     .data(points).enter().append('circle')
                     .attr('class', 'dot')
-                    .attr('r', 5)
+                    .attr('r', isNarrow ? 6 : 5)
                     .attr('cx', p => x(p.bars))
                     .attr('cy', p => y(yVal(p)))
                     .attr('fill', fillFor)
@@ -561,7 +610,7 @@
             });
 
             // ---- meter filter (chips built from the data, sorted by denominator) ----
-            const meterRow = d3.select('#meter-filter');
+            const meterRow = d3.select('#meter-chips');
             meterOrder.forEach(m => {
                 meterRow.append('button')
                     .attr('class', 'chip active')
@@ -573,8 +622,6 @@
                         applyFilter();
                     });
             });
-            meterRow.append('span').attr('class', 'tt-dim chip-hint')
-                .text('time signature');
 
             // ---- opus legend (per opus block, in render order) ----
             // Hidden until "Color by: Opus" is selected, since opus is then the fill.
