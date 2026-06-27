@@ -254,8 +254,10 @@
             .chips { flex-wrap: nowrap; }
             .toggle-label, .toggle, .toggle button, .chip { flex: 0 0 auto; }
             .toggle-label { font-size: 0.78em; }
-            .toggle button { font-size: 0.78em; padding: 4px 10px; }
-            .chip { font-size: 0.78em; padding: 3px 11px; }
+            .toggle button { font-size: 0.78em; padding: 3px 10px; line-height: 1; }
+            /* line-height:1 + smaller radius so short chips read as compact buttons,
+               not tall ovals. (Height is identical in light/dark — colors only.) */
+            .chip { font-size: 0.78em; padding: 3px 11px; line-height: 1; border-radius: 7px; }
             .diff-legend { font-size: 0.72em; }
             .diff-legend .bar { width: 84px; }
             /* Declutter: drop hints and the formula footnote on small screens. */
