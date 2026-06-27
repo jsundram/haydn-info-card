@@ -190,8 +190,8 @@
     <div class="wrap">
         <h1>Haydn String Quartets — every movement: bars vs. duration</h1>
         <p class="subtitle">
-            One dot per movement (280). Fill = opus color; outline = how the two
-            recordings differ in tempo. &middot;
+            One dot per movement (280). Fill = how the two recordings differ in
+            tempo; ring = opus color. &middot;
             <a href="index.html">&larr; back to the card</a>
         </p>
 
@@ -205,7 +205,7 @@
                 <span>Angeles faster</span>
                 <span class="bar"></span>
                 <span>Angeles slower</span>
-                <span class="tt-dim">(outline = Angeles − Buchberger)</span>
+                <span class="tt-dim">(fill = Angeles − Buchberger)</span>
             </span>
         </div>
 
@@ -266,8 +266,9 @@
                 .domain([CLAMP, 0, -CLAMP])   // +diff (Angeles slower) -> red end
                 .interpolator(d3.interpolateRdBu)
                 .clamp(true);
-            const strokeFor = p => p.diff == null
-                ? 'var(--dot-stroke-fallback)' : diffColor(p.diff);
+            // fill = the timing difference (the diverging scale reads best as the
+            // dominant channel); the opus color moves to the ring.
+            const fillFor = p => p.diff == null ? '#888' : diffColor(p.diff);
 
             // ---- layout / scales (rebuilt on resize) ----
             const margin = { top: 16, right: 20, bottom: 48, left: 64 };
@@ -330,10 +331,10 @@
                     .attr('r', 5)
                     .attr('cx', p => x(p.bars))
                     .attr('cy', p => y(yVal(p)))
-                    .attr('fill', p => p.color)
-                    .attr('fill-opacity', 0.82)
-                    .attr('stroke', strokeFor)
-                    .attr('stroke-width', 2)
+                    .attr('fill', fillFor)
+                    .attr('fill-opacity', 0.9)
+                    .attr('stroke', p => p.color)
+                    .attr('stroke-width', 2.5)
                     .on('mouseover', showTip)
                     .on('mousemove', moveTip)
                     .on('mouseout', hideTip)
@@ -388,8 +389,10 @@
             const legend = d3.select('#opus-legend');
             operaData.forEach(o => {
                 const item = legend.append('span').attr('class', 'item');
+                // ring swatch — mirrors the dot's opus-colored outline
                 item.append('span').attr('class', 'swatch')
-                    .style('background', o.color || '#888');
+                    .style('background', 'transparent')
+                    .style('border', `3px solid ${o.color || '#888'}`);
                 item.append('span').text(`Op. ${o.opus}`);
             });
 
