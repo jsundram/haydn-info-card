@@ -25,6 +25,10 @@ from playwright.sync_api import sync_playwright
 
 W, H = 1200, 630   # Open Graph standard size (1.91:1)
 
+# WhatsApp silently drops og:images over ~300 KB (no thumbnail). Keep a margin
+# and fail the build if a regenerated preview blows past it.
+MAX_BYTES = 250_000
+
 # (source page, output png, a selector that signals the page has rendered)
 PAGES = [
     ("index.html", "index-preview.png", ".quartet-card"),
@@ -89,8 +93,19 @@ def main(web_dir, scale):
                 out = os.path.join(web_dir, outname)
                 page.screenshot(path=out, clip={"x": 0, "y": 0, "width": W, "height": H})
                 browser.close()
-                img = Image.open(out)
-                print("wrote %s (%d bytes, %dx%d)" % (out, os.path.getsize(out), img.width, img.height))
+
+                # Shrink to a link-preview-friendly size: a 256-color palette
+                # (no dither) keeps the flat UI + gradients clean while cutting
+                # the file ~3x, so it stays under WhatsApp's ~300 KB cutoff.
+                img = Image.open(out).convert("RGB")
+                img.quantize(colors=256, method=Image.Quantize.FASTOCTREE,
+                             dither=Image.Dither.NONE).save(out, optimize=True)
+                size = os.path.getsize(out)
+                print("wrote %s (%d bytes, %dx%d)" % (out, size, img.width, img.height))
+                if size > MAX_BYTES:
+                    raise SystemExit(
+                        "%s is %d bytes (> %d); WhatsApp may drop the preview. "
+                        "Reduce colors or dimensions in og_preview.py." % (out, size, MAX_BYTES))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
