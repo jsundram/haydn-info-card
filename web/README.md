@@ -67,6 +67,30 @@ Actions"). The site is static with relative asset paths, so it works under the
 it does not regenerate data — so **commit a fresh `opera.json`** when the data
 changes. A custom domain would be a `web/CNAME` file + a DNS record.
 
+## Analytics
+
+Page views are tracked with [GoatCounter](https://www.goatcounter.com/)
+(privacy-friendly, no cookies, no consent banner). Both `index.html` and
+`scatter.html` carry the same snippet before `</body>`, reporting to the
+project's own site:
+
+**Dashboard: <https://haydn-periodic-table.goatcounter.com>**
+
+(sign in with the account that owns it; it's an *additional site* under the main
+`jsundram.goatcounter.com` login). There you get **pageviews vs. unique
+visitors** (uniques via a daily-rotating IP+UA hash — no IP stored), **referrers**
+(what linked here), **country-level location**, and browser/OS/screen breakdowns.
+`index.html` and `scatter.html` show up as separate paths.
+
+Notes:
+
+- Nothing is counted from `localhost` or `file://` (GoatCounter skips them by
+  design) — hits only register on the live `jsundram.github.io` site.
+- To sanity-check locally, temporarily add
+  `data-goatcounter-settings='{"allow_local": true}'` to the tag; don't commit it.
+- The script loads from GoatCounter's shared CDN (`//gc.zgo.at/count.js`). It
+  could be self-hosted in `web/` if you'd rather not depend on the CDN.
+
 ## Regenerating the data
 
 `opera.json` is generated from the same source as the printed card
