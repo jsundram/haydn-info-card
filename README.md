@@ -6,6 +6,10 @@ Find out more about this card [here](https://haydnenthusiasts.org/haydn_card.htm
 periodic-table-style card of all 68 quartets (playable movements, dark mode,
 print/mobile layouts). Source and build notes in [`web/`](web/).
 
+Traffic to the web version is tracked with [GoatCounter](https://www.goatcounter.com/);
+the dashboard is at
+**<https://haydn-periodic-table.goatcounter.com/>**.
+
 ## To Generate the latest card:
 
 1. Make whatever edits need to be made.
