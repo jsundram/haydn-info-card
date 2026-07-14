@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Haydn periodic table">
+  <!-- Maskable source: FULL-BLEED square (no rounded corners) so Android's mask
+       never reveals a transparent edge, with the glyph kept inside the center-80%
+       safe zone. Distinct from favicon.svg (rounded tile) on purpose. -->
+  <rect width="180" height="180" fill="#42d4f4"/>
+  <text x="90" y="52" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#10262b" fill-opacity="0.72" text-anchor="middle">68</text>
+  <text x="90" y="140" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="80" fill="#10262b" text-anchor="middle">Hn</text>
+</svg>

@@ -12,9 +12,18 @@
 -->
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Periodic Table of Haydn String Quartets</title>
     <meta name="description" content="An interactive periodic table of Joseph Haydn's 68 string quartets — key, Hoboken number, nickname, Peters volume, and measure-scaled, playable Spotify movement bars, arranged by opus.">
+
+    <!-- Install / PWA + mobile chrome -->
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Haydn Quartets">
 
     <!-- Favicons -->
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -159,6 +168,15 @@
             --border-card-active: #aaa;
             --shadow-card: rgba(0, 0, 0, 0.3);
             --shadow-card-hover: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Reserve the notch / home-indicator safe area on the (untransformed) html
+           element, so the mobile body's scale(0.35) hack below is left untouched.
+           Insets are 0 on desktop and in headless capture, so nothing else moves. */
+        html {
+            box-sizing: border-box;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                     env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         body {
@@ -885,6 +903,8 @@
                 .text('Error loading data. Ensure opera.json is in the same directory as this HTML file.');
         });
     </script>
+    <!-- PWA: service-worker registration + one-tap "update available" pill -->
+    <script src="app.js"></script>
     <!-- Privacy-friendly analytics (no cookies) -->
     <script data-goatcounter="https://haydn-periodic-table.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>

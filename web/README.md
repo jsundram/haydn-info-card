@@ -58,8 +58,44 @@ per-quartet QR codes that the Boccherini card has.
   site icons (a periodic-table "Hn / 68" tile). Modern browsers use the SVG; the
   PNGs are fallbacks and the home-screen icon. Referenced from each page's
   `<head>`.
+- `icon-maskable.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` —
+  PWA / manifest icons. `icon-192/512` are rasterized from `favicon.svg`; the
+  maskable is a **full-bleed** square tile (its own `icon-maskable.svg` source) so
+  Android's icon mask never crops into the artwork. Regenerate with `make-icons.sh`.
+- `manifest.json` — web app manifest (makes the site installable; name, icons,
+  `standalone` display, `start_url:"./"`). Linked from both pages' `<head>`.
+- `sw.js` — service worker: precaches the app shell for offline use, with a cache
+  version constant `V`. **See the cache-busting rule below.**
+- `app.js` — boot script loaded by both pages: registers the service worker and
+  shows a one-tap "update available" pill when the deployed `V` is ahead of the
+  installed copy.
+- `make-icons.sh` — rasterize the icon SVGs → the PNGs (needs `rsvg-convert`).
 - `build.sh` — regenerate data + share-sheet previews + screenshots.
 - `shot.sh` — quick desktop screenshot (no Python).
+
+## Install & offline (PWA)
+
+Both pages link a `manifest.json` and register `sw.js`, so the site is
+**installable** (Add to Home Screen on iOS/Android) and **works offline** after
+one online load. Adopted from the [pwa-starter](https://github.com/jsundram/pwa-starter)
+checklist.
+
+**The one cache-busting rule:** `sw.js` precaches the files listed in its `SHELL`
+array under a version constant `V` (`"haydn-v1"`). A new `V` is what evicts the
+stale cache on the next visit — **bump `V` whenever you change any precached file**
+(`index.html`, `scatter.html`, `opera.json`, `app.js`, an icon, …). Forget it and
+your fix ships to the repo but never to anyone's installed home-screen copy (iOS
+caches the service worker aggressively). `app.js` surfaces a "tap to update" pill
+as a safety net, and `../src/sw_lint.py` guards it at commit time:
+
+```sh
+git config core.hooksPath .githooks   # once per clone — enables the warn-only pre-commit
+uv run src/sw_lint.py                  # or run it by hand / in CI
+```
+
+The `*-preview.png` share cards are deliberately **not** precached (they're only
+for link scrapers, never rendered in-app). Cross-origin requests (GoatCounter,
+Spotify links) pass straight through the service worker, uncached.
 
 (The generators live at the repo root: `src/make_web_data.py`,
 `src/screenshot.py`, `src/og_preview.py`.)

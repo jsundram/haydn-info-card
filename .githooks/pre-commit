@@ -1,0 +1,6 @@
+#!/bin/bash
+# Warn-only guard: if this commit touches a precached web/sw.js SHELL file without bumping V,
+# the fix won't reach installed home-screen copies. See src/sw_lint.py.
+# Enable once per clone:  git config core.hooksPath .githooks
+python3 src/sw_lint.py || echo "  (warning only — commit continues; bump V in web/sw.js if this was a real shell change)"
+exit 0

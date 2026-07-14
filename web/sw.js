@@ -1,0 +1,62 @@
+// Service worker: offline shell + cache-busting.  (Pattern from pwa-starter.)
+//
+// THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what evicts the
+// stale cache on activate — forget the bump and your fix ships to the repo but never to anyone's
+// installed home-screen copy (iOS caches the SW aggressively). ../src/sw_lint.py guards this,
+// and app.js surfaces a "tap to update" tag so a stuck phone is fixable in one tap.
+//
+// Strategy: shell HTML/JS/JSON is network-first (a push is visible on the next reload without
+// waiting for a SW swap; falls back to cache offline); images stay cache-first for speed — a V
+// bump refreshes them. Cross-origin (GoatCounter, Spotify links) passes straight through.
+
+const V = "haydn-v1";   // <-- BUMP ON EVERY SHELL CHANGE
+const SHELL = [
+  "./", "./index.html", "./scatter.html",
+  "./opera.json", "./d3.v7.min.js", "./app.js", "./manifest.json",
+  "./favicon.svg", "./favicon-32.png", "./favicon-16.png",
+  "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png",
+  // NB: the *-preview.png share cards are intentionally NOT precached — they're only for
+  // link-scrapers, never rendered in-app, so caching them would just bloat the offline store.
+];
+
+self.addEventListener("install", e => {
+  e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener("activate", e => {
+  e.waitUntil(caches.keys()
+    .then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k))))   // evict old versions
+    .then(() => self.clients.claim()));
+});
+
+self.addEventListener("fetch", e => {
+  const u = new URL(e.request.url);
+
+  // Cross-origin (GoatCounter, Spotify, d3 CDN if ever used): straight to network, skip the cache.
+  if (u.origin !== location.origin) return;
+
+  // The SW must never intercept or cache its own script: app.js probes ./sw.js?_=<ts> to read the
+  // live version; caching those probes bloats the cache (a dead entry per resume) and can wedge the
+  // "tap to update" tag.
+  if (u.pathname.endsWith("/sw.js")) return;
+
+  // Same-origin: HTML/JS/JSON + navigations → network-first; other assets (images) → cache-first.
+  const live = e.request.mode === "navigate" || u.pathname.endsWith("/") || /\.(html|js|json)$/.test(u.pathname);
+  if (live) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        const copy = resp.clone();
+        caches.open(V).then(c => c.put(e.request, copy));
+        return resp;
+      }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html")))
+    );
+  } else {
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
+        const copy = resp.clone();
+        caches.open(V).then(c => c.put(e.request, copy));
+        return resp;
+      }))
+    );
+  }
+});
