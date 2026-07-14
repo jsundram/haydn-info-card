@@ -171,7 +171,7 @@
         }
 
         /* Reserve the notch / home-indicator safe area on the (untransformed) html
-           element, so the mobile body's scale(0.35) hack below is left untouched.
+           element, so the mobile .container scale(0.35) hack below is left untouched.
            Insets are 0 on desktop and in headless capture, so nothing else moves. */
         html {
             box-sizing: border-box;
@@ -565,13 +565,24 @@
                 --nickname-height: 15px;
                 --bottom-section-height: 20px;
             }
+            /* The card table is far wider than a phone, so scale it down to fit.
+               The transform lives on .container (NOT body) so body can clip the
+               leftover: a scaled element still reserves its FULL pre-scale box for
+               scrolling, and that phantom height is what let the page scroll past
+               the content bottom. body{overflow:hidden} clips it, and
+               fitMobileHeight() (in the script below) pins body's height to the
+               container's on-screen (scaled) height so the page ends exactly at
+               the content. */
             body {
                 margin: 0;
+                overflow: hidden;
+            }
+            .container {
+                width: calc(100% / 0.35);
                 transform: scale(0.35);
                 transform-origin: 0 0;
-                width: calc(100% / 0.35);
+                align-items: center;
             }
-            .container { width: auto; align-items: center; }
             .header-group { container-type: normal; }
             h1 { font-size: 2.5em; }
             .legend { font-size: 1em; }
@@ -599,6 +610,23 @@
 
     <script>
         const HAYDN_BIRTH_YEAR = 1732;
+
+        // On phones the card table is scaled down (see the mobile @media rule). A
+        // CSS-transformed element still reserves its full PRE-scale size for
+        // scrolling, so without this the page scrolls well past the visible
+        // content. Pin <body>'s height to the container's actual on-screen
+        // (scaled) height; body{overflow:hidden} then clips the phantom box.
+        // No-op on desktop, where nothing is scaled (height cleared to auto).
+        const MOBILE_MQ = window.matchMedia('(hover: none) and (pointer: coarse) and (max-width: 800px)');
+        function fitMobileHeight() {
+            const c = document.querySelector('.container');
+            if (!c) return;
+            document.body.style.height = MOBILE_MQ.matches
+                ? Math.ceil(c.getBoundingClientRect().height) + 'px'
+                : '';
+        }
+        window.addEventListener('resize', fitMobileHeight);
+        window.addEventListener('orientationchange', () => setTimeout(fitMobileHeight, 200));
 
         // Normally fetch opera.json. If a build/screenshot step has inlined the
         // data as window.OPERA_DATA, use that (lets the page render from a
@@ -896,6 +924,11 @@
                     }
                 });
             });
+
+            // Content is now laid out — size the mobile viewport to it (and again
+            // after a beat, in case web-font/reflow nudges the height).
+            requestAnimationFrame(fitMobileHeight);
+            setTimeout(fitMobileHeight, 300);
         }).catch(error => {
             console.error('Error loading opera.json:', error);
             d3.select('#visualization').append('p')
