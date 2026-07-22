@@ -232,6 +232,11 @@
         /* === TOOLTIP === */
         .tooltip {
             position: absolute;
+            /* Anchor while hidden so its static position (below the full page
+               layout) can't stretch the scrollable extent. JS sets left/top
+               inline when showing. */
+            top: 0;
+            left: 0;
             background: var(--bg-tooltip);
             color: var(--text-on-tooltip);
             padding: 9px 11px;

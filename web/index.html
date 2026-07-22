@@ -511,6 +511,13 @@
 
         .tooltip {
             position: absolute;
+            /* Anchor while hidden: at its static position the tooltip would sit
+               below the container's full pre-scale layout box and — since body
+               isn't positioned, so the viewport is its containing block and it
+               escapes body's clipping — stretch the page's scrollable extent
+               past the content. JS sets left/top inline when showing. */
+            top: 0;
+            left: 0;
             background: var(--bg-tooltip);
             color: var(--text-on-tooltip);
             padding: 10px;
@@ -573,6 +580,13 @@
                fitMobileHeight() (in the script below) pins body's height to the
                container's on-screen (scaled) height so the page ends exactly at
                the content. */
+            /* Per the CSS overflow spec, a non-visible overflow on <body> is
+               transferred to the viewport when html's overflow is visible (the
+               default) — which would disable user scrolling entirely and leave
+               body's own overflow visible (no clipping). An explicit overflow
+               on html keeps the viewport scrollable and makes body's hidden
+               apply to body itself. */
+            html { overflow: auto; }
             body {
                 margin: 0;
                 overflow: hidden;
