@@ -10,7 +10,7 @@
 // waiting for a SW swap; falls back to cache offline); images stay cache-first for speed — a V
 // bump refreshes them. Cross-origin (GoatCounter, Spotify links) passes straight through.
 
-const V = "haydn-v3";   // <-- BUMP ON EVERY SHELL CHANGE
+const V = "haydn-v4";   // <-- BUMP ON EVERY SHELL CHANGE
 const SHELL = [
   "./", "./index.html", "./scatter.html",
   "./opera.json", "./d3.v7.min.js", "./app.js", "./manifest.json",

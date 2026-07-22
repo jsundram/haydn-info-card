@@ -828,14 +828,15 @@
 
                 const styles = getComputedStyle(document.documentElement);
                 const lineHeight = parseFloat(styles.getPropertyValue('--mvmt-line-height')) || 10;
-                const barColor = styles.getPropertyValue('--mvmt-bar-color').trim() || '#444444';
-                const minuetColor = styles.getPropertyValue('--mvmt-bar-minuet').trim() || '#EEEEEE';
-                const spotifyColor = styles.getPropertyValue('--mvmt-bar-spotify').trim() || '#1DB954';
                 const tracks = quartet.tracks || [];
 
                 const minuetIndices = new Set(
                     quartet.mvmts.map((m, i) => isMinuet(m) ? i : -1).filter(i => i >= 0)
                 );
+                // Bar fills reference the CSS vars directly (via inline style, since
+                // SVG presentation attributes don't resolve var()) so a live theme
+                // flip re-resolves them for free — no snapshot, no re-render.
+                const barFill = d => minuetIndices.has(d) ? 'var(--mvmt-bar-minuet)' : 'var(--mvmt-bar-color)';
 
                 // Bar width proportional to each movement's duration (seconds), on
                 // the single global scale, so total length is comparable across
@@ -859,7 +860,7 @@
                     .attr('width', d => widths[d])
                     .attr('height', lineHeight - 1.5)
                     .attr('rx', cornerRadius).attr('ry', cornerRadius)
-                    .attr('fill', d => minuetIndices.has(d) ? minuetColor : barColor)
+                    .style('fill', barFill)
                     // outline minuet bars so they read on light opus-colored badges
                     .attr('stroke', d => minuetIndices.has(d) ? 'rgba(0,0,0,0.35)' : 'none')
                     .attr('stroke-width', 0.75)
@@ -875,10 +876,10 @@
                 // stick Spotify-green after the track opens.
                 if (!isTouchDevice) {
                     rects.on('mouseover', function(event, d) {
-                        if (tracks[d]) d3.select(this).attr('fill', spotifyColor);
+                        if (tracks[d]) d3.select(this).style('fill', 'var(--mvmt-bar-spotify)');
                     })
                     .on('mouseout', function(event, d) {
-                        d3.select(this).attr('fill', minuetIndices.has(d) ? minuetColor : barColor);
+                        d3.select(this).style('fill', barFill(d));
                     });
                 }
                 rects.append('title')
