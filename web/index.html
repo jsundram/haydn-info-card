@@ -675,7 +675,10 @@
 
             const container = d3.select('#visualization');
             const tooltip = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
-            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            // Match the CSS's idea of a touch device (see the mobile @media rule):
+            // hover:none + pointer:coarse. Plain maxTouchPoints would put
+            // touch-capable laptops on the tap-only path and lose hover tooltips.
+            const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
             let activeCard = null;
 
             const getBorderColor = () => getComputedStyle(document.documentElement).getPropertyValue('--border-card').trim();
@@ -861,18 +864,23 @@
                     .attr('stroke', d => minuetIndices.has(d) ? 'rgba(0,0,0,0.35)' : 'none')
                     .attr('stroke-width', 0.75)
                     .style('cursor', d => tracks[d] ? 'pointer' : 'default')
-                    .on('mouseover', function(event, d) {
-                        if (tracks[d]) d3.select(this).attr('fill', spotifyColor);
-                    })
-                    .on('mouseout', function(event, d) {
-                        d3.select(this).attr('fill', minuetIndices.has(d) ? minuetColor : barColor);
-                    })
                     .on('click', function(event, d) {
                         if (tracks[d]) {
                             event.stopPropagation();
                             window.open(tracks[d], '_blank', 'noopener');
                         }
                     });
+                // Hover recolor is pointer-only: on touch a tap fires mouseover
+                // AND click together, and mouseout never comes, so the bar would
+                // stick Spotify-green after the track opens.
+                if (!isTouchDevice) {
+                    rects.on('mouseover', function(event, d) {
+                        if (tracks[d]) d3.select(this).attr('fill', spotifyColor);
+                    })
+                    .on('mouseout', function(event, d) {
+                        d3.select(this).attr('fill', minuetIndices.has(d) ? minuetColor : barColor);
+                    });
+                }
                 rects.append('title')
                     .text(d => `${mvmtNums[d] || d + 1}. ${quartet.mvmts[d]} — ${mmss(barSec(quartet.durations[d]))}`
                         + (tracks[d] ? ' (click to play)' : ''));

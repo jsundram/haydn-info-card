@@ -464,7 +464,9 @@
             // On touch devices a single tap fires BOTH mouseover and click, which
             // would pop the tooltip AND open Spotify at once. So on touch a tap only
             // toggles the tooltip; playing happens via the explicit ▶ link inside it.
-            const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            // hover:none + pointer:coarse matches the CSS's idea of touch; plain
+            // maxTouchPoints would put touch-capable laptops on the tap-only path.
+            const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
             let activeDot = null;
             if (isTouch) {
                 // The tooltip stays click-through (pointer-events:none) except its ▶
