@@ -466,6 +466,23 @@
                 .attr('class', 'tooltip').style('opacity', 0);
             const plot = d3.select('#plot');
 
+            // In the installed (home-screen) app, window.open / target=_blank
+            // spawns an in-app browser sheet that iOS leaves hanging open after it
+            // hands the Spotify URL off to the Spotify app. Navigate the current
+            // page instead: the universal link opens the app and the PWA stays put.
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+            function openTrack(url) {
+                if (isStandalone) {
+                    window.location.href = url;
+                } else {
+                    window.open(url, '_blank', 'noopener');
+                }
+            }
+            // Same reasoning for the tooltip's ▶ link: in standalone, a plain
+            // same-window navigation triggers the universal-link handoff sheet-free.
+            const TRACK_LINK_ATTRS = isStandalone ? '' : ' target="_blank" rel="noopener"';
+
             // On touch devices a single tap fires BOTH mouseover and click, which
             // would pop the tooltip AND open Spotify at once. So on touch a tap only
             // toggles the tooltip; playing happens via the explicit ▶ link inside it.
@@ -558,7 +575,7 @@
                        .on('mousemove', moveTip)
                        .on('mouseout', hideTip)
                        .on('click', (event, p) => {
-                           if (p.track) window.open(p.track, '_blank', 'noopener');
+                           if (p.track) openTrack(p.track);
                        });
                 }
             }
@@ -584,7 +601,7 @@
                     + row('Angeles', p.angeles, cur === 'angeles')
                     + diffTxt
                     + `</div>`
-                    + (p.track ? `<a class="tt-play" href="${p.track}" target="_blank" rel="noopener">▶ play on Spotify</a>` : '')
+                    + (p.track ? `<a class="tt-play" href="${p.track}"${TRACK_LINK_ATTRS}>▶ play on Spotify</a>` : '')
                 ).style('opacity', 1);
                 moveTip(event);
             }
