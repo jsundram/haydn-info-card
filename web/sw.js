@@ -1,4 +1,4 @@
-// pwa-starter: sw.js @ 2ed87e9
+// pwa-starter: sw.js @ 8d54c48
 // Service worker: offline shell + cache-busting.  (Pattern from pwa-starter.)
 //
 // THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what evicts the
@@ -6,11 +6,14 @@
 // installed home-screen copy (iOS caches the SW aggressively). ../src/sw_lint.py guards this,
 // and app.js surfaces a "tap to update" tag so a stuck phone is fixable in one tap.
 //
-// Strategy: shell HTML/JS/JSON is network-first (a push is visible on the next reload without
-// waiting for a SW swap; falls back to cache offline); images stay cache-first for speed — a V
-// bump refreshes them. Cross-origin (GoatCounter, Spotify links) passes straight through.
+// Strategy, by what the file IS rather than where it lives:
+//   HTML/JS + navigations → network-first (a push is visible on the next reload without waiting
+//     for a SW swap; falls back to cache offline)
+//   JSON → stale-while-revalidate (it's data: paint from cache now, refresh behind it)
+//   images and everything else → cache-first for speed; a V bump is what refreshes them
+//   cross-origin (GoatCounter, Spotify links) → straight through, never cached here
 
-const V = "haydn-v4";   // <-- BUMP ON EVERY SHELL CHANGE
+const V = "haydn-v5";   // <-- BUMP ON EVERY SHELL CHANGE
 const SHELL = [
   "./", "./index.html", "./scatter.html",
   "./opera.json", "./d3.v7.min.js", "./app.js", "./manifest.json",
@@ -54,8 +57,22 @@ self.addEventListener("fetch", e => {
   // "tap to update" tag.
   if (u.pathname.endsWith("/sw.js")) return;
 
-  // Same-origin: HTML/JS/JSON + navigations → network-first; other assets (images) → cache-first.
-  const live = e.request.mode === "navigate" || u.pathname.endsWith("/") || /\.(html|js|json)$/.test(u.pathname);
+  // Same-origin JSON → stale-while-revalidate: serve the cached copy IMMEDIATELY, refresh
+  // behind it (pwa-starter e88a743). opera.json (107 KB) is this app's only data source and
+  // both pages fetch it at boot; network-first made every cold start block first paint on a
+  // round trip for a committed, precached file that almost never changes. The tradeoff is
+  // real but small: an opera.json change lands one load later than an HTML/JS change.
+  if (/\.json$/.test(u.pathname)) {
+    e.respondWith(caches.match(e.request).then(cached => {
+      const net = fetch(e.request).then(resp => { cachePut(e.request, resp); return resp; });
+      e.waitUntil(net.catch(() => {}));   // keep the SW alive for the refresh; offline is fine
+      return cached || net;               // no cached copy (first run) → wait for the network
+    }));
+    return;
+  }
+
+  // Same-origin: HTML/JS + navigations → network-first; other assets (images) → cache-first.
+  const live = e.request.mode === "navigate" || u.pathname.endsWith("/") || /\.(html|js)$/.test(u.pathname);
   if (live) {
     e.respondWith(
       fetch(e.request).then(resp => {
