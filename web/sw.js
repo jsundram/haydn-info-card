@@ -1,3 +1,4 @@
+// pwa-starter: sw.js @ 2ed87e9
 // Service worker: offline shell + cache-busting.  (Pattern from pwa-starter.)
 //
 // THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what evicts the
@@ -9,7 +10,7 @@
 // waiting for a SW swap; falls back to cache offline); images stay cache-first for speed — a V
 // bump refreshes them. Cross-origin (GoatCounter, Spotify links) passes straight through.
 
-const V = "haydn-v2";   // <-- BUMP ON EVERY SHELL CHANGE
+const V = "haydn-v3";   // <-- BUMP ON EVERY SHELL CHANGE
 const SHELL = [
   "./", "./index.html", "./scatter.html",
   "./opera.json", "./d3.v7.min.js", "./app.js", "./manifest.json",
@@ -29,6 +30,19 @@ self.addEventListener("activate", e => {
     .then(() => self.clients.claim()));
 });
 
+// Cache-write gate (from pwa-starter, see its CLAUDE.md §Offline). A fetch() only
+// REJECTS on a network failure — a 404 or a mid-deploy 502 arrives as a RESOLVED
+// response, so an ungated put() overwrites a good cached copy with an error body
+// that then survives as the offline fallback until the next V bump.
+// Opaque responses (cross-origin no-cors: webfonts, CDN scripts) always report
+// ok:false/status:0 no matter how they went, so they're exempt — gating them would
+// silently disable font caching and break offline type.
+function cachePut(req, resp) {
+  if (!resp.ok && resp.type !== "opaque") return;
+  const copy = resp.clone();
+  caches.open(V).then(c => c.put(req, copy));
+}
+
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
 
@@ -45,16 +59,17 @@ self.addEventListener("fetch", e => {
   if (live) {
     e.respondWith(
       fetch(e.request).then(resp => {
-        const copy = resp.clone();
-        caches.open(V).then(c => c.put(e.request, copy));
+        cachePut(e.request, resp);
+        // A 4xx/5xx is a resolved fetch, so .catch() below never sees it — serve
+        // the good cached copy instead of handing the app an error page.
+        if (!resp.ok) return caches.match(e.request).then(r => r || resp);
         return resp;
       }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html")))
     );
   } else {
     e.respondWith(
       caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
-        const copy = resp.clone();
-        caches.open(V).then(c => c.put(e.request, copy));
+        cachePut(e.request, resp);
         return resp;
       }))
     );
