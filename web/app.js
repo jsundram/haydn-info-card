@@ -1,3 +1,4 @@
+// pwa-starter: app.js @ 8d54c48
 // App boot: service-worker registration + a one-tap "update available" pill.
 // (Pattern from pwa-starter, trimmed — this app has no cross-origin data to poll
 // and its dark mode is media-query-only, so the theme/data/PTR plumbing is omitted.)

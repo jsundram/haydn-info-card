@@ -13,7 +13,7 @@
 //   images and everything else → cache-first for speed; a V bump is what refreshes them
 //   cross-origin (GoatCounter, Spotify links) → straight through, never cached here
 
-const V = "haydn-v5";   // <-- BUMP ON EVERY SHELL CHANGE
+const V = "haydn-v6";   // <-- BUMP ON EVERY SHELL CHANGE
 const SHELL = [
   "./", "./index.html", "./scatter.html",
   "./opera.json", "./d3.v7.min.js", "./app.js", "./manifest.json",
