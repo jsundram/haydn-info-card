@@ -4,5 +4,5 @@
        apply their own corner mask). Same glyph treatment as icon.svg. -->
   <rect width="180" height="180" rx="34" fill="#42d4f4"/>
   <text x="15" y="40" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="600" fill="#10262b" fill-opacity="0.72">68</text>
-  <text x="90" y="133" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="100" fill="#10262b" text-anchor="middle">Hn</text>
+  <text x="90" y="126" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="106" fill="#10262b" text-anchor="middle">Hn</text>
 </svg>
