@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Haydn periodic table">
+  <!-- Browser-tab favicon: a rounded tile is fine here because it is NOT mask-composited by
+       the OS. For the home-screen / PWA icons use the square icon.svg instead (so iOS/Android
+       apply their own corner mask). Same glyph treatment as icon.svg. -->
   <rect width="180" height="180" rx="34" fill="#42d4f4"/>
-  <text x="16" y="46" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#10262b" fill-opacity="0.72">68</text>
-  <text x="90" y="130" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="90" fill="#10262b" text-anchor="middle">Hn</text>
+  <text x="15" y="40" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="600" fill="#10262b" fill-opacity="0.72">68</text>
+  <text x="90" y="126" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="106" fill="#10262b" text-anchor="middle">Hn</text>
 </svg>
