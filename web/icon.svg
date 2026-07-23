@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Haydn periodic table">
+  <!-- App icon: a periodic-table "element" cell. 68 = number of quartets; Hn = Haydn.
+       SQUARE + OPAQUE on purpose so the apple-touch-icon isn't double-masked and iOS/Android
+       supply the corner rounding (mirrors the sibling Boccherini icon). Single source of truth
+       for apple-touch-icon / icon-192 / icon-512: edit here, then run make-icons.sh. -->
+  <rect width="180" height="180" fill="#42d4f4"/>
+  <text x="15" y="40" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="600" fill="#10262b" fill-opacity="0.72">68</text>
+  <text x="90" y="133" font-family="Helvetica, Arial, sans-serif" font-weight="bold" font-size="100" fill="#10262b" text-anchor="middle">Hn</text>
+</svg>
