@@ -254,17 +254,13 @@
         .legend .swatch.movement { background: var(--mvmt-bar-color); }
 
         /* === PETERS VOLUME HIGHLIGHT FILTER ===
-           A compact segmented control. Picking a volume dims the other cards
-           so a single Peters volume reads at a glance; "All" clears it. */
+           A compact segmented control that lives inline in the legend row.
+           Picking a volume dims the other cards so a single Peters volume
+           reads at a glance; "All" clears it. */
         .peters-filter {
-            display: flex;
-            flex-wrap: wrap;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 4px 8px;
-            margin: 0 0 22px 0;
-            font-size: clamp(0.6em, 0.7vw, 0.72em);
-            color: var(--text-muted);
+            gap: 6px;
         }
         .peters-filter .pf-label {
             font-weight: 600;
@@ -663,21 +659,19 @@
             <p class="subtitle">see also <a href="https://quartetroulette.com/Haydn/" target="_blank" rel="noopener noreferrer">Quartet Roulette</a> &middot; <a href="https://haydnenthusiasts.org/haydn_card.html" target="_blank" rel="noopener noreferrer">about this card</a></p>
             <div class="legend">
                 <span class="item"><span class="swatch minor"></span> minor key (gray bar)</span>
-                <span class="item">accidentals on left edge</span>
-                <span class="item">Hob. = Hoboken III № &middot; #n = № in opus</span>
                 <span class="item">bar width &prop; movement length (duration)</span>
                 <span class="item"><span class="swatch minuet"></span> minuet/scherzo movement</span>
                 <span class="item">click a bar to play on Spotify &#9654;</span>
-            </div>
-            <div class="peters-filter" role="group" aria-label="Highlight quartets by Peters volume">
-                <span class="pf-label">Highlight Peters vol.</span>
-                <div class="pf-btns">
-                    <button type="button" class="pf-btn active" data-vol="all" aria-pressed="true">All</button>
-                    <button type="button" class="pf-btn" data-vol="1" aria-pressed="false">I</button>
-                    <button type="button" class="pf-btn" data-vol="2" aria-pressed="false">II</button>
-                    <button type="button" class="pf-btn" data-vol="3" aria-pressed="false">III</button>
-                    <button type="button" class="pf-btn" data-vol="4" aria-pressed="false">IV</button>
-                </div>
+                <span class="peters-filter" role="group" aria-label="Highlight quartets by Peters volume">
+                    <span class="pf-label">Highlight Peters vol.</span>
+                    <span class="pf-btns">
+                        <button type="button" class="pf-btn active" data-vol="all" aria-pressed="true">All</button>
+                        <button type="button" class="pf-btn" data-vol="1" aria-pressed="false">I</button>
+                        <button type="button" class="pf-btn" data-vol="2" aria-pressed="false">II</button>
+                        <button type="button" class="pf-btn" data-vol="3" aria-pressed="false">III</button>
+                        <button type="button" class="pf-btn" data-vol="4" aria-pressed="false">IV</button>
+                    </span>
+                </span>
             </div>
         </div>
         <div id="visualization"></div>
