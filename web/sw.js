@@ -22,7 +22,7 @@
 //   3. is a complete-looking cache BOOTABLE? → bootable() / offlineFallback()
 // The seven review rounds behind this design: pwa-starter#7.
 
-const V = "haydn-v9";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem freely; keep the digits)
+const V = "haydn-v10";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem freely; keep the digits)
 
 // "haydn-v" — the stem shared by every cache generation. app.js's VER_PREFIX must match it, and
 // the NUMERIC TAIL is load-bearing: it orders generations for the collect below and for
@@ -152,7 +152,7 @@ self.addEventListener("install", e => {
 //
 // Keeping the old cache is NOT free, which is why this has to be re-runnable rather than a
 // one-shot in activate: CacheStorage.match() iterates caches in CREATION order, so while an old
-// version lingers it ANSWERS FIRST and shadows the current shell (caches ['haydn-v8','haydn-v9']
+// version lingers it ANSWERS FIRST and shadows the current shell (caches ['haydn-v8','haydn-v10']
 // both holding a URL resolve to the v8 copy). A lingering old cache means the device serves the
 // previous release offline, and checkVer() reads the wrong installed version. cacheLookup()
 // closes the read-path shadowing by construction, but the storage cost and the checkVer()
