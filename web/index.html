@@ -253,6 +253,62 @@
         .legend .swatch.minuet { background: var(--mvmt-bar-minuet); }
         .legend .swatch.movement { background: var(--mvmt-bar-color); }
 
+        /* === PETERS VOLUME HIGHLIGHT FILTER ===
+           A compact segmented control that lives inline in the legend row.
+           Picking a volume dims the other cards so a single Peters volume
+           reads at a glance; "All" clears it. */
+        .peters-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .peters-filter .pf-label {
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .peters-filter .pf-btns {
+            display: inline-flex;
+            border: 1px solid var(--border-card);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .peters-filter .pf-btn {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            border-left: 1px solid var(--border-card);
+            background: transparent;
+            color: var(--text-muted);
+            font: inherit;
+            line-height: 1.5;
+            padding: 2px 9px;
+            min-width: 26px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .peters-filter .pf-btn:first-child { border-left: 0; }
+        .peters-filter .pf-btn:hover { background: color-mix(in srgb, var(--text-muted) 15%, transparent); }
+        /* Negative outline-offset draws the focus ring *inside* the button, so the
+           pill's overflow:hidden (which rounds the end caps) can't clip it away. */
+        .peters-filter .pf-btn:focus-visible {
+            outline: 2px solid var(--border-card-active);
+            outline-offset: -2px;
+        }
+        .peters-filter .pf-btn.active {
+            background: var(--border-card-active);
+            color: var(--bg-card);
+            font-weight: 700;
+        }
+
+        /* When a volume is highlighted, fade the non-matching cards (and any opus
+           label with no matching quartet) back. Hovering a faded card lifts it
+           partway so it can still be inspected. */
+        body.peters-highlighting .quartet-card:not(.pf-match),
+        body.peters-highlighting .opus-label:not(.pf-match) { opacity: 0.22; }
+        body.peters-highlighting .quartet-card:not(.pf-match):hover { opacity: 0.6; }
+
         .opus-row {
             display: flex;
             align-items: flex-start;
@@ -270,6 +326,7 @@
             text-align: right;
             position: relative;
             border-radius: 4px;
+            transition: opacity 0.2s;
             /* Per-opus "periodic table" color, as a linear fade toward the cards.
                --opus-color is set inline per opus; --splash scales it for dark mode. */
             --splash: 42%;
@@ -556,6 +613,11 @@
             .opus-label { width: 95px; box-shadow: none !important; }
             .quartet-card { box-shadow: none !important; border: 1px solid #999; }
             .tooltip { display: none !important; }
+            /* Print is always the complete table: drop the interactive filter and
+               ignore any on-screen highlight so no card or label prints faded. */
+            .peters-filter { display: none !important; }
+            body.peters-highlighting .quartet-card:not(.pf-match),
+            body.peters-highlighting .opus-label:not(.pf-match) { opacity: 1 !important; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         @media print and (prefers-color-scheme: dark) {
@@ -611,11 +673,19 @@
             <p class="subtitle">see also <a href="https://quartetroulette.com/Haydn/" target="_blank" rel="noopener noreferrer">Quartet Roulette</a> &middot; <a href="https://haydnenthusiasts.org/haydn_card.html" target="_blank" rel="noopener noreferrer">about this card</a></p>
             <div class="legend">
                 <span class="item"><span class="swatch minor"></span> minor key (gray bar)</span>
-                <span class="item">accidentals on left edge</span>
-                <span class="item">Hob. = Hoboken III № &middot; #n = № in opus</span>
                 <span class="item">bar width &prop; movement length (duration)</span>
                 <span class="item"><span class="swatch minuet"></span> minuet/scherzo movement</span>
                 <span class="item">click a bar to play on Spotify &#9654;</span>
+                <span class="peters-filter">
+                    <span class="pf-label" id="pf-label">Highlight Peters vol.</span>
+                    <span class="pf-btns" role="radiogroup" aria-labelledby="pf-label">
+                        <button type="button" class="pf-btn active" data-vol="all" role="radio" aria-checked="true" tabindex="0">All</button>
+                        <button type="button" class="pf-btn" data-vol="1" role="radio" aria-checked="false" tabindex="-1">I</button>
+                        <button type="button" class="pf-btn" data-vol="2" role="radio" aria-checked="false" tabindex="-1">II</button>
+                        <button type="button" class="pf-btn" data-vol="3" role="radio" aria-checked="false" tabindex="-1">III</button>
+                        <button type="button" class="pf-btn" data-vol="4" role="radio" aria-checked="false" tabindex="-1">IV</button>
+                    </span>
+                </span>
             </div>
         </div>
         <div id="visualization"></div>
@@ -731,6 +801,10 @@
             function renderOpusLabel(parent, opus) {
                 const label = parent.append('div').attr('class', 'opus-label');
                 if (opus.color) label.style('--opus-color', opus.color);
+                // Peters volumes present in this opus, for the highlight filter:
+                // the label dims when none of its quartets match the chosen volume.
+                label.attr('data-peters-vols',
+                    [...new Set(opus.quartets.map(q => q.peters).filter(Boolean))].join(' '));
 
                 const yearAge = label.append('div').attr('class', 'year-age');
                 yearAge.append('span').attr('class', 'year').text(opus.year);
@@ -801,6 +875,8 @@
 
                 const card = parent.append('div').attr('class', 'quartet-card');
                 if (opus.color) card.style('--opus-color', opus.color);
+                // Peters volume, for the highlight filter (empty for Op. 0, absent from Peters)
+                card.attr('data-peters', quartet.peters || '');
 
                 if (isTouchDevice) {
                     card.on('click', function(event) {
@@ -963,6 +1039,49 @@
                         else qc.append('div').attr('class', 'quartet-blank');
                     }
                 });
+            });
+
+            // === PETERS VOLUME HIGHLIGHT FILTER ===
+            // Toggle a body class + per-card .pf-match so the CSS fades every card
+            // that isn't in the chosen volume; "All" clears the highlight.
+            const petersBtns = Array.from(document.querySelectorAll('.peters-filter .pf-btn'));
+            function applyPetersFilter(vol) {
+                const highlighting = vol !== 'all';
+                document.body.classList.toggle('peters-highlighting', highlighting);
+                d3.selectAll('.quartet-card').each(function() {
+                    this.classList.toggle('pf-match', !highlighting || this.dataset.peters === vol);
+                });
+                // Dim an opus label when none of its quartets are in the chosen volume.
+                d3.selectAll('.opus-label').each(function() {
+                    const vols = (this.dataset.petersVols || '').split(' ').filter(Boolean);
+                    this.classList.toggle('pf-match', !highlighting || vols.includes(vol));
+                });
+                petersBtns.forEach(b => {
+                    const on = b.dataset.vol === vol;
+                    b.classList.toggle('active', on);
+                    b.setAttribute('aria-checked', on ? 'true' : 'false');
+                    // Roving tabindex: only the checked radio is a tab stop, so Tab
+                    // moves past the whole group and arrows move within it.
+                    b.tabIndex = on ? 0 : -1;
+                });
+            }
+            petersBtns.forEach(b => b.addEventListener('click', () => applyPetersFilter(b.dataset.vol)));
+
+            // Arrow/Home/End move the selection within the radiogroup, per the ARIA
+            // radio pattern (moving focus also selects).
+            document.querySelector('.peters-filter .pf-btns').addEventListener('keydown', event => {
+                const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+                let next;
+                if (step) {
+                    const i = petersBtns.indexOf(event.target);
+                    if (i < 0) return;
+                    next = petersBtns[(i + step + petersBtns.length) % petersBtns.length];
+                } else if (event.key === 'Home') next = petersBtns[0];
+                else if (event.key === 'End') next = petersBtns[petersBtns.length - 1];
+                else return;
+                event.preventDefault();
+                applyPetersFilter(next.dataset.vol);
+                next.focus();
             });
 
             // Content is now laid out — size the mobile viewport to it (and again
