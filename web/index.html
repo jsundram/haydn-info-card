@@ -253,6 +253,58 @@
         .legend .swatch.minuet { background: var(--mvmt-bar-minuet); }
         .legend .swatch.movement { background: var(--mvmt-bar-color); }
 
+        /* === PETERS VOLUME HIGHLIGHT FILTER ===
+           A compact segmented control. Picking a volume dims the other cards
+           so a single Peters volume reads at a glance; "All" clears it. */
+        .peters-filter {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 4px 8px;
+            margin: 0 0 22px 0;
+            font-size: clamp(0.6em, 0.7vw, 0.72em);
+            color: var(--text-muted);
+        }
+        .peters-filter .pf-label {
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .peters-filter .pf-btns {
+            display: inline-flex;
+            border: 1px solid var(--border-card);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .peters-filter .pf-btn {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            border-left: 1px solid var(--border-card);
+            background: transparent;
+            color: var(--text-muted);
+            font: inherit;
+            line-height: 1.5;
+            padding: 2px 9px;
+            min-width: 26px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .peters-filter .pf-btn:first-child { border-left: 0; }
+        .peters-filter .pf-btn:hover { background: color-mix(in srgb, var(--text-muted) 15%, transparent); }
+        .peters-filter .pf-btn.active {
+            background: var(--border-card-active);
+            color: var(--bg-card);
+            font-weight: 700;
+        }
+
+        /* When a volume is highlighted, fade the non-matching cards back.
+           Hovering a faded card lifts it partway so it can still be inspected. */
+        body.peters-highlighting .quartet-card:not(.pf-match) { opacity: 0.22; }
+        body.peters-highlighting .quartet-card:not(.pf-match):hover { opacity: 0.6; }
+
         .opus-row {
             display: flex;
             align-items: flex-start;
@@ -617,6 +669,16 @@
                 <span class="item"><span class="swatch minuet"></span> minuet/scherzo movement</span>
                 <span class="item">click a bar to play on Spotify &#9654;</span>
             </div>
+            <div class="peters-filter" role="group" aria-label="Highlight quartets by Peters volume">
+                <span class="pf-label">Highlight Peters vol.</span>
+                <div class="pf-btns">
+                    <button type="button" class="pf-btn active" data-vol="all" aria-pressed="true">All</button>
+                    <button type="button" class="pf-btn" data-vol="1" aria-pressed="false">I</button>
+                    <button type="button" class="pf-btn" data-vol="2" aria-pressed="false">II</button>
+                    <button type="button" class="pf-btn" data-vol="3" aria-pressed="false">III</button>
+                    <button type="button" class="pf-btn" data-vol="4" aria-pressed="false">IV</button>
+                </div>
+            </div>
         </div>
         <div id="visualization"></div>
         <p class="footer">* The traditional count of 83 quartets has been revised by the collected edition <i>Joseph Haydn: Werke</i>, which removes Opus 1 №5 (Symphony &lsquo;A&rsquo;, Hob. I:107), Opus 2 №3 and №5 (sextets, Hob. II:21&ndash;22), the six quartets of Opus 3 (spurious &mdash; probably by Romanus Hoffstetter, 1742&ndash;1815), and the individual movements of Haydn&rsquo;s arrangement of <i>The Seven Last Words</i>. Opus 1 №0 (&lsquo;Opus 0&rsquo;), rescued from Hob. II:6, is included here although absent from Peters. The early quartets were written for Baron Fürnberg; their dates are uncertain. Opus 103 was left unfinished, surviving as only two movements.</p>
@@ -801,6 +863,8 @@
 
                 const card = parent.append('div').attr('class', 'quartet-card');
                 if (opus.color) card.style('--opus-color', opus.color);
+                // Peters volume, for the highlight filter (empty for Op. 0, absent from Peters)
+                card.attr('data-peters', quartet.peters || '');
 
                 if (isTouchDevice) {
                     card.on('click', function(event) {
@@ -964,6 +1028,24 @@
                     }
                 });
             });
+
+            // === PETERS VOLUME HIGHLIGHT FILTER ===
+            // Toggle a body class + per-card .pf-match so the CSS fades every card
+            // that isn't in the chosen volume; "All" clears the highlight.
+            const petersBtns = Array.from(document.querySelectorAll('.peters-filter .pf-btn'));
+            function applyPetersFilter(vol) {
+                const highlighting = vol !== 'all';
+                document.body.classList.toggle('peters-highlighting', highlighting);
+                d3.selectAll('.quartet-card').each(function() {
+                    this.classList.toggle('pf-match', !highlighting || this.dataset.peters === vol);
+                });
+                petersBtns.forEach(b => {
+                    const on = b.dataset.vol === vol;
+                    b.classList.toggle('active', on);
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+            }
+            petersBtns.forEach(b => b.addEventListener('click', () => applyPetersFilter(b.dataset.vol)));
 
             // Content is now laid out — size the mobile viewport to it (and again
             // after a beat, in case web-font/reflow nudges the height).
