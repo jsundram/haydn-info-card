@@ -296,9 +296,11 @@
             font-weight: 700;
         }
 
-        /* When a volume is highlighted, fade the non-matching cards back.
-           Hovering a faded card lifts it partway so it can still be inspected. */
-        body.peters-highlighting .quartet-card:not(.pf-match) { opacity: 0.22; }
+        /* When a volume is highlighted, fade the non-matching cards (and any opus
+           label with no matching quartet) back. Hovering a faded card lifts it
+           partway so it can still be inspected. */
+        body.peters-highlighting .quartet-card:not(.pf-match),
+        body.peters-highlighting .opus-label:not(.pf-match) { opacity: 0.22; }
         body.peters-highlighting .quartet-card:not(.pf-match):hover { opacity: 0.6; }
 
         .opus-row {
@@ -318,6 +320,7 @@
             text-align: right;
             position: relative;
             border-radius: 4px;
+            transition: opacity 0.2s;
             /* Per-opus "periodic table" color, as a linear fade toward the cards.
                --opus-color is set inline per opus; --splash scales it for dark mode. */
             --splash: 42%;
@@ -787,6 +790,10 @@
             function renderOpusLabel(parent, opus) {
                 const label = parent.append('div').attr('class', 'opus-label');
                 if (opus.color) label.style('--opus-color', opus.color);
+                // Peters volumes present in this opus, for the highlight filter:
+                // the label dims when none of its quartets match the chosen volume.
+                label.attr('data-peters-vols',
+                    [...new Set(opus.quartets.map(q => q.peters).filter(Boolean))].join(' '));
 
                 const yearAge = label.append('div').attr('class', 'year-age');
                 yearAge.append('span').attr('class', 'year').text(opus.year);
@@ -1032,6 +1039,11 @@
                 document.body.classList.toggle('peters-highlighting', highlighting);
                 d3.selectAll('.quartet-card').each(function() {
                     this.classList.toggle('pf-match', !highlighting || this.dataset.peters === vol);
+                });
+                // Dim an opus label when none of its quartets are in the chosen volume.
+                d3.selectAll('.opus-label').each(function() {
+                    const vols = (this.dataset.petersVols || '').split(' ').filter(Boolean);
+                    this.classList.toggle('pf-match', !highlighting || vols.includes(vol));
                 });
                 petersBtns.forEach(b => {
                     const on = b.dataset.vol === vol;
