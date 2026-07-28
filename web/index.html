@@ -607,6 +607,11 @@
             .opus-label { width: 95px; box-shadow: none !important; }
             .quartet-card { box-shadow: none !important; border: 1px solid #999; }
             .tooltip { display: none !important; }
+            /* Print is always the complete table: drop the interactive filter and
+               ignore any on-screen highlight so no card or label prints faded. */
+            .peters-filter { display: none !important; }
+            body.peters-highlighting .quartet-card:not(.pf-match),
+            body.peters-highlighting .opus-label:not(.pf-match) { opacity: 1 !important; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         @media print and (prefers-color-scheme: dark) {
