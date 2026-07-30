@@ -56,6 +56,11 @@
             --card-height: clamp(100px, 12vw, 140px);
             --card-gap: clamp(6px, 0.8vw, 10px);
             --opus-label-width: clamp(85px, 8vw, 95px);
+            /* Both .opus-label and .quartet-card are content-box, so these add to
+               their widths. The .footer width calc needs them to match the table. */
+            --opus-label-pad-l: clamp(4px, 0.6vw, 8px);
+            --opus-label-pad-r: clamp(5px, 0.6vw, 8px);
+            --card-border: 2px;
             --top-section-height: clamp(14px, 1.7vw, 20px);
             --nickname-height: clamp(10px, 1.3vw, 15px);
             --bottom-section-height: clamp(14px, 1.7vw, 20px);
@@ -221,9 +226,15 @@
         .subtitle a:hover { text-decoration: underline; }
 
         /* Footnote on the revised quartet count. Width matches the table so it
-           wraps the same on desktop and the centered mobile layout. */
+           wraps the same on desktop and the centered mobile layout, and its
+           justified right edge lands on the last column's right edge. Both boxes
+           in the sum are content-box, so the label's padding and each card's
+           border have to be counted explicitly — omitting them left the footer
+           16px + 6*4px = 40px short of the table. */
         .footer {
-            width: calc(var(--opus-label-width) + 6 * var(--card-height) + 6 * var(--card-gap));
+            width: calc(var(--opus-label-width) + var(--opus-label-pad-l) + var(--opus-label-pad-r)
+                        + 6 * (var(--card-height) + 2 * var(--card-border))
+                        + 6 * var(--card-gap));
             margin: 18px 0 0 0;
             font-size: clamp(0.62em, 0.72vw, 0.74em);
             line-height: 1.45;
@@ -319,7 +330,12 @@
         .opus-label {
             width: var(--opus-label-width);
             height: var(--card-height);
-            padding: clamp(1px, 0.2vw, 2px) clamp(16px, 2.2vw, 30px) 0 clamp(4px, 0.6vw, 8px);
+            /* The box is content-box, so the right padding does NOT move the
+               right-aligned column (age, opus number, byname) — that sits at the
+               content edge either way. It sets the gutter between that column and
+               the first card: kept small so the column reads as the cards' row
+               header rather than as a detached strip. The card gap adds the rest. */
+            padding: clamp(1px, 0.2vw, 2px) var(--opus-label-pad-r) 0 var(--opus-label-pad-l);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -340,7 +356,13 @@
         /* TOP: year + age, aligns with mode bar */
         .opus-label .year-age {
             display: flex;
+            /* Year to the left edge, age to the right. Grouped at the right the
+               two collide (only ~5px apart at desktop, since neither scales with
+               the label); splitting them buys the year its own column and keeps
+               the age on the right edge with the opus number and byname.
+               The gap survives as a minimum, for narrow labels. */
             justify-content: space-between;
+            gap: clamp(3px, 0.4vw, 5px);
             align-items: center;
             height: var(--top-section-height);
             flex-shrink: 0;
@@ -391,7 +413,7 @@
         .opus-label .opus-byname {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
             flex-shrink: 0;
             height: var(--bottom-section-height);
             font-size: var(--bottom-font-size);
@@ -415,7 +437,7 @@
             width: var(--card-height);
             height: var(--card-height);
             background: var(--bg-card);
-            border: 2px solid var(--border-card);
+            border: var(--card-border) solid var(--border-card);
             border-radius: 4px;
             padding: 0;
             box-shadow: 2px 2px 5px var(--shadow-card);
@@ -432,9 +454,12 @@
             border-color: var(--border-card-hover);
         }
 
-        /* Empty grid column where a quartet is absent (e.g. 2#3, 2#5) */
+        /* Empty grid column where a quartet is absent (e.g. 2#3, 2#5). It has to
+           occupy a card's FULL width — .quartet-card is content-box, so a card is
+           card-height plus its two borders. Without the borders every blank pulled
+           the rest of its row 4px off the column grid. */
         .quartet-blank {
-            width: var(--card-height);
+            width: calc(var(--card-height) + 2 * var(--card-border));
             height: var(--card-height);
             flex-shrink: 0;
         }
