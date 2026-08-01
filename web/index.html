@@ -176,8 +176,9 @@
         }
 
         /* Reserve the notch / home-indicator safe area on the (untransformed) html
-           element, so the mobile .container scale(0.35) hack below is left untouched.
-           Insets are 0 on desktop and in headless capture, so nothing else moves. */
+           element, so the mobile .container transform:scale hack below is left
+           untouched. Insets are 0 on desktop and in headless capture, so nothing
+           else moves. */
         html {
             box-sizing: border-box;
             padding: env(safe-area-inset-top) env(safe-area-inset-right)
@@ -694,7 +695,7 @@
                leftover: a scaled element still reserves its FULL pre-scale box for
                scrolling, and that phantom height is what let the page scroll past
                the content bottom. body{overflow:hidden} clips it, and
-               fitMobileHeight() (in the script below) pins body's height to the
+               fitMobile() (in the script below) pins body's height to the
                container's on-screen (scaled) height so the page ends exactly at
                the content. */
             /* Per the CSS overflow spec, a non-visible overflow on <body> is
@@ -709,8 +710,12 @@
                 overflow: hidden;
             }
             .container {
-                width: calc(100% / 0.35);
-                transform: scale(0.35);
+                /* JS (fitMobile) overwrites --mobile-scale to fit the table to
+                   the viewport width; 0.35 is the fallback if the script hasn't
+                   run yet (or fails), matching the old fixed layout. */
+                --mobile-scale: 0.35;
+                width: calc(100% / var(--mobile-scale));
+                transform: scale(var(--mobile-scale));
                 transform-origin: 0 0;
                 align-items: center;
             }
@@ -767,22 +772,53 @@
         // same-window navigation triggers the universal-link handoff sheet-free.
         const TRACK_LINK_ATTRS = isStandalone ? '' : ' target="_blank" rel="noopener noreferrer"';
 
-        // On phones the card table is scaled down (see the mobile @media rule). A
-        // CSS-transformed element still reserves its full PRE-scale size for
-        // scrolling, so without this the page scrolls well past the visible
-        // content. Pin <body>'s height to the container's actual on-screen
-        // (scaled) height; body{overflow:hidden} then clips the phantom box.
-        // No-op on desktop, where nothing is scaled (height cleared to auto).
+        // On phones the card table is scaled down (see the mobile @media rule).
+        // Two things need doing there, both handled by fitMobile():
+        //
+        //  1. WIDTH: the desktop table is far wider than a phone. Rather than a
+        //     fixed shrink factor (which underfills wide phones, wastes ~half the
+        //     width near the 800px breakpoint, and clips narrow ones), measure the
+        //     table's natural layout width and pick the scale that makes it fill
+        //     the viewport. offsetWidth is *layout* px — it ignores the ancestor
+        //     transform — so it reports the true unscaled width regardless of the
+        //     scale currently applied (same reason the movement-bar probe below
+        //     uses offsetWidth). That also makes this convergent, not oscillating:
+        //     the measured width is fixed by the card-size CSS vars, not by scale.
+        //
+        //  2. HEIGHT: a CSS-transformed element still reserves its full PRE-scale
+        //     size for scrolling, so the page would scroll well past the visible
+        //     content. Pin <body>'s height to the container's actual on-screen
+        //     (scaled) height; body{overflow:hidden} then clips the phantom box.
+        //
+        // No-op on desktop, where nothing is scaled (scale/height cleared).
         const MOBILE_MQ = window.matchMedia('(hover: none) and (pointer: coarse) and (max-width: 800px)');
-        function fitMobileHeight() {
+        const MOBILE_MARGIN = 5;   // px of breathing room on each side of the table
+        const MOBILE_MAX_SCALE = 0.8;  // cap so the near-800px case doesn't balloon
+        function fitMobile() {
             const c = document.querySelector('.container');
             if (!c) return;
-            document.body.style.height = MOBILE_MQ.matches
-                ? Math.ceil(c.getBoundingClientRect().height) + 'px'
-                : '';
+            if (!MOBILE_MQ.matches) {
+                c.style.removeProperty('--mobile-scale');
+                document.body.style.height = '';
+                return;
+            }
+            // Natural (unscaled) content width = the widest laid-out element: the
+            // opus rows (all equal full-grid width, since empty columns render as
+            // .quartet-blank), the nowrap title, and the footer.
+            let natural = 0;
+            c.querySelectorAll('.opus-row, h1, .footer').forEach(e => {
+                natural = Math.max(natural, e.offsetWidth);
+            });
+            if (natural > 0) {
+                const scale = Math.min(MOBILE_MAX_SCALE,
+                    (window.innerWidth - 2 * MOBILE_MARGIN) / natural);
+                c.style.setProperty('--mobile-scale', scale.toFixed(4));
+            }
+            // Read the on-screen height AFTER applying the scale so body matches.
+            document.body.style.height = Math.ceil(c.getBoundingClientRect().height) + 'px';
         }
-        window.addEventListener('resize', fitMobileHeight);
-        window.addEventListener('orientationchange', () => setTimeout(fitMobileHeight, 200));
+        window.addEventListener('resize', fitMobile);
+        window.addEventListener('orientationchange', () => setTimeout(fitMobile, 200));
 
         // Normally fetch opera.json. If a build/screenshot step has inlined the
         // data as window.OPERA_DATA, use that (lets the page render from a
@@ -1099,8 +1135,8 @@
                 .style('position', 'absolute')
                 .style('visibility', 'hidden');
             // offsetWidth = layout px; getBoundingClientRect would return the
-            // transform-scaled width under the mobile scale(0.35) layout, which
-            // would shrink every movement bar to ~1/3 of the card.
+            // transform-scaled width under the mobile scale layout, which would
+            // shrink every movement bar to a fraction of the card.
             const cardPx = probe.node().offsetWidth || 140;
             probe.remove();
             const usableBar = cardPx - BAR_PAD;
@@ -1214,10 +1250,10 @@
                 if (event.key === 'Escape') clearKeyHighlight();
             });
 
-            // Content is now laid out — size the mobile viewport to it (and again
-            // after a beat, in case web-font/reflow nudges the height).
-            requestAnimationFrame(fitMobileHeight);
-            setTimeout(fitMobileHeight, 300);
+            // Content is now laid out — fit the mobile scale/height to it (and
+            // again after a beat, in case web-font/reflow nudges the metrics).
+            requestAnimationFrame(fitMobile);
+            setTimeout(fitMobile, 300);
         }).catch(error => {
             console.error('Error loading opera.json:', error);
             d3.select('#visualization').append('p')
