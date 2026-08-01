@@ -797,22 +797,42 @@
         function fitMobile() {
             const c = document.querySelector('.container');
             if (!c) return;
+            const hg = c.querySelector('.header-group');
+            const h1 = c.querySelector('h1');
             if (!MOBILE_MQ.matches) {
                 c.style.removeProperty('--mobile-scale');
                 document.body.style.height = '';
+                if (hg) hg.style.width = '';       // undo the mobile-only overrides
+                if (h1) h1.style.fontSize = '';
                 return;
             }
-            // Natural (unscaled) content width = the widest laid-out element: the
-            // opus rows (all equal full-grid width, since empty columns render as
-            // .quartet-blank), the nowrap title, and the footer.
-            let natural = 0;
-            c.querySelectorAll('.opus-row, h1, .footer').forEach(e => {
-                natural = Math.max(natural, e.offsetWidth);
-            });
-            if (natural > 0) {
+            // Fit the scale to the TABLE (the opus rows — all equal full-grid
+            // width, since empty columns render as .quartet-blank), NOT the title:
+            // the title is wider than the grid, so fitting to it would leave the
+            // grid inset. offsetWidth is layout px (transform-independent), the
+            // same reason the movement-bar probe below uses it.
+            const rows = [...c.querySelectorAll('.opus-row')].map(e => e.offsetWidth);
+            const tableWidth = rows.length ? Math.max(...rows)
+                : (c.querySelector('.footer')?.offsetWidth || 0);
+            if (tableWidth > 0) {
                 const scale = Math.min(MOBILE_MAX_SCALE,
-                    (window.innerWidth - 2 * MOBILE_MARGIN) / natural);
+                    (window.innerWidth - 2 * MOBILE_MARGIN) / tableWidth);
                 c.style.setProperty('--mobile-scale', scale.toFixed(4));
+                // Pin the header block to the grid width so the subtitle's right
+                // edge and the legend line up with the grid's edges.
+                if (hg) hg.style.width = tableWidth + 'px';
+                // Keep the nowrap title within the grid width so it can't overflow
+                // the now-constrained header (or dictate a wider scale). Reset to
+                // the CSS base first so this is idempotent across resizes; measure
+                // with scrollWidth (content width, ignoring the box constraint).
+                if (h1) {
+                    h1.style.fontSize = '';
+                    const natural = h1.scrollWidth;
+                    if (natural > tableWidth) {
+                        const px = parseFloat(getComputedStyle(h1).fontSize);
+                        h1.style.fontSize = (px * tableWidth / natural * 0.99).toFixed(2) + 'px';
+                    }
+                }
             }
             // Read the on-screen height AFTER applying the scale so body matches.
             document.body.style.height = Math.ceil(c.getBoundingClientRect().height) + 'px';
