@@ -30,6 +30,13 @@ Peters volume, position within key, and the movement list with per-movement and
 total measures (each a Spotify link). Light/dark mode follows the system
 preference; there are also print and mobile (phone) layouts.
 
+Two highlight filters fade everything else back so one slice of the table reads
+at a glance: the **Peters volume** segmented control in the legend, and **tapping
+a quartet's key** (its centered readout, or the key in the tooltip) to light up
+every quartet in that key. Only one is active at a time; tap the same key again,
+pick a Peters volume, or press **Esc** to clear. Neither affects the print
+layout, which always renders the full table.
+
 ## Status
 
 Live and feature-complete relative to the printed card. Everything from the
