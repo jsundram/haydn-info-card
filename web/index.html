@@ -661,6 +661,10 @@
             }
             body { font-size: 9pt; background: var(--bg-body); zoom: 0.73; }
             h1 { font-size: 3.2em !important; max-width: 100%; }
+            /* fitMobile() pins these inline for the phone screen layout; MOBILE_MQ
+               (a screen query) doesn't flip for print, so override them here in
+               case someone prints from a phone. (h1's font-size above already is.) */
+            .header-group { width: auto !important; }
             .subtitle { font-size: 1.3em !important; }
             .legend { font-size: 0.9em !important; }
             .opus-row { page-break-inside: avoid; break-inside: avoid; }
@@ -815,8 +819,15 @@
             const tableWidth = rows.length ? Math.max(...rows)
                 : (c.querySelector('.footer')?.offsetWidth || 0);
             if (tableWidth > 0) {
+                // Available width = the container's containing block (body), which
+                // sits INSIDE html's env(safe-area-inset-*) padding. In portrait
+                // the L/R insets are 0 (so this equals innerWidth), but in notched
+                // landscape they aren't — using body.clientWidth keeps the table
+                // within the safe area instead of letting body{overflow:hidden}
+                // clip it. Fall back to innerWidth if body isn't measurable yet.
+                const avail = document.body.clientWidth || window.innerWidth;
                 const scale = Math.min(MOBILE_MAX_SCALE,
-                    (window.innerWidth - 2 * MOBILE_MARGIN) / tableWidth);
+                    (avail - 2 * MOBILE_MARGIN) / tableWidth);
                 c.style.setProperty('--mobile-scale', scale.toFixed(4));
                 // Pin the header block to the grid width so the subtitle's right
                 // edge and the legend line up with the grid's edges.
