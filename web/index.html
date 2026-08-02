@@ -907,6 +907,15 @@
             const getBorderColor = () => getComputedStyle(document.documentElement).getPropertyValue('--border-card').trim();
             const getActiveBorderColor = () => getComputedStyle(document.documentElement).getPropertyValue('--border-card-active').trim();
 
+            // Close the persistent (touch) tooltip and drop every card's active
+            // border. Used wherever a tap dismisses the tooltip without a specific
+            // card in hand (tap-away, or a key highlight superseding it).
+            function dismissTooltip() {
+                tooltip.style('opacity', 0);
+                d3.selectAll('.quartet-card').style('border-color', getBorderColor());
+                activeCard = null;
+            }
+
             if (isTouchDevice) {
                 tooltip.style('pointer-events', 'auto');
                 tooltip.on('click', function(event) {
@@ -917,9 +926,7 @@
                 });
                 d3.select('body').on('click', function(event) {
                     if (!event.target.closest('.quartet-card') && !event.target.closest('.tooltip')) {
-                        tooltip.style('opacity', 0);
-                        d3.selectAll('.quartet-card').style('border-color', getBorderColor());
-                        activeCard = null;
+                        dismissTooltip();
                         // Tapping empty space also clears the key highlight — the
                         // mobile equivalent of Esc / clicking away on desktop.
                         clearKeyHighlight();
@@ -1281,11 +1288,7 @@
                 // unobscured and its Spotify movement links stop catching the next
                 // tap — which, on mobile, is meant to browse or clear the focus, not
                 // open Spotify. Desktop's hover tooltip is left to its own mouseout.
-                if (isTouchDevice) {
-                    tooltip.style('opacity', 0);
-                    d3.selectAll('.quartet-card').style('border-color', getBorderColor());
-                    activeCard = null;
-                }
+                if (isTouchDevice) dismissTooltip();
                 document.body.classList.add('key-highlighting');
                 d3.selectAll('.quartet-card').each(function() {
                     this.classList.toggle('key-match', this.dataset.key === key);
