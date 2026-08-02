@@ -239,10 +239,13 @@ python3 -m http.server 8000   # from web/, then open http://localhost:8000/
   every label; 3+ char numbers ("103", "54/55") get the `.compact` class.
 
 **Gotchas (these caused real bugs):**
-- The mobile layout uses `transform: scale(0.35)` (a real-phone hack). Two
+- The mobile layout scales the whole grid down with a CSS `transform`: a
+  `--mobile-scale` that `fitMobile()` computes at load/resize to fit the grid to
+  the viewport width (0.35 is only the fallback if the script hasn't run). Two
   consequences for headless capture:
-  1. `getBoundingClientRect()` returns *scaled* sizes, so the movement-bar scale
-     probe must use **`offsetWidth`** (layout px) or every bar renders ~⅓ short.
+  1. `getBoundingClientRect()` returns *scaled* sizes, so the movement-bar probe
+     (and `fitMobile`'s own width measurement) must use **`offsetWidth`** (layout
+     px) or every bar renders a fraction short.
   2. Playwright `full_page` widens the viewport past the 800px mobile breakpoint,
      disabling the transform mid-capture. `screenshot.py` therefore **never** uses
      `full_page`: it fixes the device width, grows only the height, and captures a
