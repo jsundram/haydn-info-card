@@ -912,7 +912,7 @@
                     // becomes a tap target for the key highlight; on desktop the key
                     // is plain text (the card's key readout is the click target).
                     const keyDisp = isTouchDevice
-                        ? `<span class="tt-key" data-key="${keyName(quartet)}" role="button" tabindex="0">${keyName(quartet)}</span>`
+                        ? `<span class="tt-key" data-key="${keyName(quartet)}">${keyName(quartet)}</span>`
                         : keyName(quartet);
                     let html = `<strong>Opus ${opusNo}${num} in ${keyDisp}</strong>${hob}<br>`;
                     if (quartet.nickname) html += `<em>"${quartet.nickname}"</em><br>`;
