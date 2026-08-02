@@ -22,7 +22,7 @@
 //   3. is a complete-looking cache BOOTABLE? → bootable() / offlineFallback()
 // The seven review rounds behind this design: pwa-starter#7.
 
-const V = "haydn-v14";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem freely; keep the digits)
+const V = "haydn-v15";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem freely; keep the digits)
 
 // "haydn-v" — the stem shared by every cache generation. app.js's VER_PREFIX must match it, and
 // the NUMERIC TAIL is load-bearing: it orders generations for the collect below and for

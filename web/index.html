@@ -920,6 +920,9 @@
                         tooltip.style('opacity', 0);
                         d3.selectAll('.quartet-card').style('border-color', getBorderColor());
                         activeCard = null;
+                        // Tapping empty space also clears the key highlight — the
+                        // mobile equivalent of Esc / clicking away on desktop.
+                        clearKeyHighlight();
                     }
                 });
             }
@@ -1021,6 +1024,10 @@
                 if (isTouchDevice) {
                     card.on('click', function(event) {
                         event.stopPropagation();
+                        // Tapping a card outside the focused key exits the focus, so
+                        // moving on to a different quartet clears the highlight. Cards
+                        // *in* the focused key keep it, so you can browse the group.
+                        if (activeKey && this.dataset.key !== activeKey) clearKeyHighlight();
                         if (activeCard === this) hideTooltip.call(this);
                         else showTooltip.call(this, event);
                     });
@@ -1270,6 +1277,15 @@
                     applyPetersFilter('all');
                 }
                 activeKey = key;
+                // Dismiss the persistent touch tooltip so the highlighted table is
+                // unobscured and its Spotify movement links stop catching the next
+                // tap — which, on mobile, is meant to browse or clear the focus, not
+                // open Spotify. Desktop's hover tooltip is left to its own mouseout.
+                if (isTouchDevice) {
+                    tooltip.style('opacity', 0);
+                    d3.selectAll('.quartet-card').style('border-color', getBorderColor());
+                    activeCard = null;
+                }
                 document.body.classList.add('key-highlighting');
                 d3.selectAll('.quartet-card').each(function() {
                     this.classList.toggle('key-match', this.dataset.key === key);
