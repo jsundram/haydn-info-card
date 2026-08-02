@@ -320,6 +320,34 @@
         body.peters-highlighting .opus-label:not(.pf-match) { opacity: 0.22; }
         body.peters-highlighting .quartet-card:not(.pf-match):hover { opacity: 0.6; }
 
+        /* === KEY HIGHLIGHT ===
+           Tapping a quartet's key — on the card or in its tooltip — highlights
+           every quartet in that key and fades the rest, the same treatment the
+           Peters filter uses. Tapping the same key again, choosing a Peters
+           volume, or pressing Escape clears it. */
+        body.key-highlighting .quartet-card:not(.key-match),
+        body.key-highlighting .opus-label:not(.key-match) { opacity: 0.22; }
+        body.key-highlighting .quartet-card:not(.key-match):hover { opacity: 0.6; }
+
+        /* The key readout is the tap target. */
+        .key-section { cursor: pointer; }
+        .key-section:hover .key-signature {
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+        }
+        .key-section:focus-visible {
+            outline: 2px solid var(--border-card-active);
+            outline-offset: -2px;
+            border-radius: 3px;
+        }
+        /* The tappable key inside a tooltip (touch only — see showTooltip). */
+        .tooltip .tt-key {
+            cursor: pointer;
+            text-decoration: underline dotted;
+            text-underline-offset: 2px;
+        }
+
         .opus-row {
             display: flex;
             align-items: flex-start;
@@ -642,7 +670,9 @@
                ignore any on-screen highlight so no card or label prints faded. */
             .peters-filter { display: none !important; }
             body.peters-highlighting .quartet-card:not(.pf-match),
-            body.peters-highlighting .opus-label:not(.pf-match) { opacity: 1 !important; }
+            body.peters-highlighting .opus-label:not(.pf-match),
+            body.key-highlighting .quartet-card:not(.key-match),
+            body.key-highlighting .opus-label:not(.key-match) { opacity: 1 !important; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         @media print and (prefers-color-scheme: dark) {
@@ -812,7 +842,12 @@
 
             if (isTouchDevice) {
                 tooltip.style('pointer-events', 'auto');
-                tooltip.on('click', e => e.stopPropagation());
+                tooltip.on('click', function(event) {
+                    event.stopPropagation();
+                    // Tapping the key in the tooltip highlights that key's group.
+                    const k = event.target.closest('.tt-key');
+                    if (k) applyKeyHighlight(k.dataset.key);
+                });
                 d3.select('body').on('click', function(event) {
                     if (!event.target.closest('.quartet-card') && !event.target.closest('.tooltip')) {
                         tooltip.style('opacity', 0);
@@ -830,6 +865,11 @@
                 // the label dims when none of its quartets match the chosen volume.
                 label.attr('data-peters-vols',
                     [...new Set(opus.quartets.map(q => q.peters).filter(Boolean))].join(' '));
+                // Distinct keys present in this opus, for the key highlight: the
+                // label dims when none of its quartets are in the tapped key.
+                // Pipe-delimited because key names contain spaces ("B-flat major").
+                label.attr('data-keys',
+                    [...new Set(opus.quartets.map(keyName))].join('|'));
 
                 const yearAge = label.append('div').attr('class', 'year-age');
                 yearAge.append('span').attr('class', 'year').text(opus.year);
@@ -868,7 +908,13 @@
                     const hob = quartet.hoboken ? ` (Hob. ${quartet.hoboken})` : '';
                     const opusNo = quartet.opus != null ? quartet.opus : opus.opus;
 
-                    let html = `<strong>Opus ${opusNo}${num} in ${keyName(quartet)}</strong>${hob}<br>`;
+                    // On touch the tooltip is persistent and clickable, so the key
+                    // becomes a tap target for the key highlight; on desktop the key
+                    // is plain text (the card's key readout is the click target).
+                    const keyDisp = isTouchDevice
+                        ? `<span class="tt-key" data-key="${keyName(quartet)}">${keyName(quartet)}</span>`
+                        : keyName(quartet);
+                    let html = `<strong>Opus ${opusNo}${num} in ${keyDisp}</strong>${hob}<br>`;
                     if (quartet.nickname) html += `<em>"${quartet.nickname}"</em><br>`;
                     const bits = [];
                     if (quartet.peters) bits.push(`Peters Vol. ${PETERS[quartet.peters]}`);
@@ -902,6 +948,8 @@
                 if (opus.color) card.style('--opus-color', opus.color);
                 // Peters volume, for the highlight filter (empty for Op. 0, absent from Peters)
                 card.attr('data-peters', quartet.peters || '');
+                // Key (pitch + mode), for the key highlight.
+                card.attr('data-key', keyName(quartet));
 
                 if (isTouchDevice) {
                     card.on('click', function(event) {
@@ -931,6 +979,26 @@
                     .text(quartet.key.replace('-flat', '♭').replace('-sharp', '♯'));
                 keySection.append('div').attr('class', 'key-mode')
                     .text(quartet.major ? 'major' : 'minor');
+
+                // Tapping the key highlights every quartet in that key (see the
+                // key-highlight handler below). stopPropagation keeps a tap here
+                // from also toggling the card's tooltip on touch.
+                const thisKey = keyName(quartet);
+                keySection
+                    .attr('role', 'button')
+                    .attr('tabindex', 0)
+                    .attr('aria-label', `Highlight quartets in ${thisKey}`)
+                    .on('click', function(event) {
+                        event.stopPropagation();
+                        applyKeyHighlight(thisKey);
+                    })
+                    .on('keydown', function(event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            applyKeyHighlight(thisKey);
+                        }
+                    });
 
                 // Accidentals on the left edge
                 const sig = c5.get(keyName(quartet));
@@ -1071,6 +1139,9 @@
             // that isn't in the chosen volume; "All" clears the highlight.
             const petersBtns = Array.from(document.querySelectorAll('.peters-filter .pf-btn'));
             function applyPetersFilter(vol) {
+                // The Peters filter and the key highlight share the same fade, so
+                // only one runs at a time — choosing a volume clears any key.
+                clearKeyHighlight();
                 const highlighting = vol !== 'all';
                 document.body.classList.toggle('peters-highlighting', highlighting);
                 d3.selectAll('.quartet-card').each(function() {
@@ -1107,6 +1178,40 @@
                 event.preventDefault();
                 applyPetersFilter(next.dataset.vol);
                 next.focus();
+            });
+
+            // === KEY HIGHLIGHT ===
+            // Tapping a quartet's key (on the card or in its tooltip) fades every
+            // quartet that isn't in that key. Tapping the same key again, choosing
+            // a Peters volume, or pressing Escape clears it.
+            let activeKey = null;
+            function clearKeyHighlight() {
+                if (!activeKey) return;
+                activeKey = null;
+                document.body.classList.remove('key-highlighting');
+                d3.selectAll('.key-match').classed('key-match', false);
+            }
+            function applyKeyHighlight(key) {
+                // Re-tapping the active key toggles the highlight back off.
+                if (!key || key === activeKey) { clearKeyHighlight(); return; }
+                // Turning on a key highlight supersedes any Peters volume highlight.
+                if (document.body.classList.contains('peters-highlighting')) {
+                    applyPetersFilter('all');
+                }
+                activeKey = key;
+                document.body.classList.add('key-highlighting');
+                d3.selectAll('.quartet-card').each(function() {
+                    this.classList.toggle('key-match', this.dataset.key === key);
+                });
+                // An opus label stays lit if any of its quartets are in the key.
+                d3.selectAll('.opus-label').each(function() {
+                    const keys = (this.dataset.keys || '').split('|');
+                    this.classList.toggle('key-match', keys.includes(key));
+                });
+            }
+            // Escape clears the key highlight (parity with dismissing a tooltip).
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape') clearKeyHighlight();
             });
 
             // Content is now laid out — size the mobile viewport to it (and again
