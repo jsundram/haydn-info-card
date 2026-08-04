@@ -1,4 +1,4 @@
-// pwa-starter: sw.js @ 9c197b0
+// pwa-starter: sw.js @ 3ec3032
 // Service worker: offline shell + cache-busting.  (Pattern from pwa-starter.)
 //
 // THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what refreshes the
@@ -71,6 +71,11 @@ async function missingFromShell(cache) {
   return SHELL.filter((_, i) => !found[i]);
 }
 
+// TRANSIENT = a retry could fix it (5xx mid-deploy blip, 408, 429); any other non-ok status is a
+// definite server answer. Shared by ensureShellOnce()'s classification and the live branch's
+// navigation-error split — one predicate, so the two sites can't drift.
+const isTransientStatus = s => s >= 500 || s === 408 || s === 429;
+
 // Precache top-up. Deliberately NOT cache.addAll(): addAll is atomic, so a single 404 (a shell
 // file renamed and the list not updated, or a mid-deploy blip) rejects the whole install and the
 // device ends up with NO cache at all — offline then shows a blank screen. Per-file puts degrade
@@ -104,11 +109,6 @@ async function missingFromShell(cache) {
 // KNOWN LIMITATION: a put() that fails for QUOTA is counted transient, which keeps the old cache
 // and so keeps consuming the quota that just ran out. Harmless at this shell's size; a larger
 // shell (precached PDFs/media) should evict the old version to make room instead of holding both.
-// TRANSIENT = a retry could fix it (5xx mid-deploy blip, 408, 429); any other non-ok status is a
-// definite server answer. Shared by ensureShellOnce()'s classification and the live branch's
-// navigation-error split — one predicate, so the two sites can't drift.
-const isTransientStatus = s => s >= 500 || s === 408 || s === 429;
-
 async function ensureShellOnce() {
   try {
     const c = await caches.open(V);
