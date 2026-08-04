@@ -309,6 +309,29 @@ async function bootable(pathname) {
   return (await Promise.all(deps.map(u => cacheLookup(u)))).every(Boolean);
 }
 
+// Network-first is BOUNDED by this timer so a slow-but-alive link can't hold first paint hostage
+// (see the live branch). Long enough that an ordinarily sluggish connection still gets its fresh
+// bytes; short enough that "the page won't open" never happens when a cached copy is sitting right
+// there. It is a FIRST-PAINT bound, not a hard deadline — the fetch runs on past it to refresh the
+// cache — so erring short costs at most a one-reload-stale shell (the update pill and the next
+// launch both correct it), while erring long IS the blank-screen wait this exists to end.
+const NET_TIMEOUT_MS = 3000;
+
+// Reject `promise` if it hasn't settled within `ms`. Used only where a cached fallback exists, so a
+// timeout routes into the offline path rather than stranding the request. The underlying fetch is
+// untouched — racing a timer against it doesn't abort it — so the caller keeps it alive to refresh
+// the cache. clearTimeout on settle so a resolved fetch doesn't hold a pending timer (and the SW)
+// awake for the remainder of the window.
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("network timeout")), ms);
+    promise.then(
+      v => { clearTimeout(timer); resolve(v); },
+      err => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
 
@@ -350,23 +373,48 @@ self.addEventListener("fetch", e => {
   }
 
   // Same-origin: HTML/JS + navigations → network-first; other assets (images) → cache-first.
+  //
+  // Network-first, but BOUNDED. fetch() only rejects on a real failure, so the catch below never
+  // sees the mobile-common middle state: a connection that is UP but crawling ("lie-fi" — a weak
+  // cell signal, a slow public network, a captive portal that half-answers). There the fetch
+  // neither resolves nor rejects — it hangs — and respondWith() stays pending, so WebKit paints
+  // the very blank screen the offline path exists to prevent, now with no timeout and nothing to
+  // act on. This was the reported bug: not "no internet" (that rejects fast and falls back) but
+  // "internet, but too slow to answer."
+  //
+  // So the fetch is raced against NET_TIMEOUT_MS WHEN a cached copy exists to fall back to: if the
+  // network hasn't answered by then, serve the cache and stop waiting. The slow fetch is NOT
+  // cancelled — waitUntil keeps it alive so its eventual result still refreshes the cache — so
+  // "fresh on the next reload" survives; only THIS paint refuses to block on a dead-slow link.
+  // Without a cached copy there is nothing better to show, so the fetch is awaited in full (a first
+  // run has to), still ending at a real Response via the fallback.
   if (live) {
-    e.respondWith(
-      fetch(e.request).then(resp => {
-        cachePut(e.request, resp);
-        // A 4xx/5xx is a resolved fetch, so .catch() below never sees it — serve
-        // the good cached copy instead of handing the app an error page.
-        if (!resp.ok) return cacheLookup(e.request).then(r => r || resp);
-        return resp;
-      }).catch(async () => {
-        // Offline. Try the exact request, then the shell, then give up VISIBLY. Resolving
-        // respondWith() to undefined is the original blank-screen bug: WebKit fails the
-        // navigation with "Returned response is null" and iOS paints a blank white page — no
-        // text, no error, nothing to act on.
-        //
+    const net = fetch(e.request).then(resp => {
+      cachePut(e.request, resp);
+      // A 4xx/5xx is a resolved fetch, so the catch below never sees it — serve the good cached
+      // copy instead of handing the app an error page.
+      if (!resp.ok) return cacheLookup(e.request).then(r => r || resp);
+      return resp;
+    });
+    e.respondWith((async () => {
+      // Read the cache up front (concurrent with the in-flight fetch, so the fast path pays
+      // nothing): it decides whether we can afford to time the network out, and it's the copy the
+      // catch hands back — looked up once, not twice.
+      const cached = await cacheLookup(e.request);
+      try {
+        return await (cached ? withTimeout(net, NET_TIMEOUT_MS) : net);
+      } catch {
+        // Offline, OR too slow with a cached copy in hand — identical from here. Keep the fetch
+        // alive so a merely-slow response still lands in the cache for next time (a no-op when it
+        // was a genuine offline rejection: net is already settled). Resolving respondWith() to
+        // undefined is the original blank-screen bug: WebKit fails the navigation with "Returned
+        // response is null" and iOS paints a blank white page — no text, no error, nothing to act
+        // on — so every branch below ends at a real Response.
+        e.waitUntil(net.catch(() => {}));
+
         // A document we can't actually boot is worse than the honest fallback, so bootable() is
-        // checked BEFORE the cached copy is handed back — including the exact-request hit below,
-        // which for a navigation IS the document.
+        // checked BEFORE the cached copy is handed back — including the exact-request hit, which
+        // for a navigation IS the document.
         if (e.request.mode === "navigate" && !(await bootable(u.pathname))) {
           return offlineFallback(e.request);
         }
@@ -381,9 +429,9 @@ self.addEventListener("fetch", e => {
         const key = docKey(u.pathname);
         const shell = e.request.mode === "navigate" && (key === "" || key === "index.html")
           ? await cacheLookup("./index.html") : null;
-        return (await cacheLookup(e.request)) || shell || offlineFallback(e.request);
-      })
-    );
+        return cached || shell || offlineFallback(e.request);
+      }
+    })());
   } else {
     e.respondWith(
       cacheLookup(e.request).then(r => r || fetch(e.request).then(resp => {
