@@ -111,6 +111,10 @@
 
             --shadow-card: rgba(0, 0, 0, 0.1);
             --shadow-card-hover: rgba(0, 0, 0, 0.2);
+
+            /* Legend key panel (the "how to read this card" strip). */
+            --bg-legend: #fafafa;
+            --border-legend: #e6e6e6;
         }
 
         /* === DARK MODE COLORS === */
@@ -145,6 +149,9 @@
 
                 --shadow-card: rgba(0, 0, 0, 0.3);
                 --shadow-card-hover: rgba(0, 0, 0, 0.5);
+
+                --bg-legend: #242424;
+                --border-legend: #3a3a3a;
             }
         }
 
@@ -173,6 +180,8 @@
             --border-card-active: #aaa;
             --shadow-card: rgba(0, 0, 0, 0.3);
             --shadow-card-hover: rgba(0, 0, 0, 0.5);
+            --bg-legend: #242424;
+            --border-legend: #3a3a3a;
         }
 
         /* Reserve the notch / home-indicator safe area on the (untransformed) html
@@ -208,15 +217,16 @@
         }
 
         h1 {
-            margin: 0 0 5px 0;
+            margin: 0 0 4px 0;
             text-align: center;
             color: var(--text-secondary);
             font-size: 4.0cqw;
             white-space: nowrap;
+            letter-spacing: -0.01em;
         }
 
         .subtitle {
-            margin: 0 0 12px 0;
+            margin: 0 0 10px 0;
             text-align: right;
             color: var(--text-muted);
             font-size: clamp(0.75em, 0.85vw, 0.9em);
@@ -244,15 +254,25 @@
         }
         .footer i { font-style: italic; }
 
-        /* === LEGEND === */
+        /* === LEGEND ===
+           A centered "key" panel — a subtle bordered strip that reads as the
+           card's legend rather than loose text, and separates how-to-read-it
+           (the static items) from the interactive Peters filter with a divider. */
         .legend {
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
             justify-content: center;
-            gap: 6px 18px;
-            margin: 0 0 22px 0;
+            gap: 7px 16px;
+            width: fit-content;
+            max-width: 100%;
+            margin: 0 auto 20px;
+            padding: 7px 16px;
             font-size: clamp(0.6em, 0.7vw, 0.72em);
             color: var(--text-muted);
+            background: var(--bg-legend);
+            border: 1px solid var(--border-legend);
+            border-radius: 9px;
         }
         .legend .item { display: inline-flex; align-items: center; gap: 5px; }
         .legend .swatch {
@@ -273,6 +293,13 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            padding-left: 16px;
+            border-left: 1px solid var(--border-legend);
+        }
+        /* When the legend wraps (narrow / mobile) the divider would dangle at a
+           line start, so drop it there and let the gap do the separating. */
+        @media (max-width: 900px) {
+            .peters-filter { padding-left: 0; border-left: 0; }
         }
         .peters-filter .pf-label {
             font-weight: 600;
@@ -723,9 +750,22 @@
                 transform-origin: 0 0;
                 align-items: center;
             }
-            .header-group { container-type: normal; }
-            h1 { font-size: 2.5em; }
-            .legend { font-size: 1em; }
+            /* Give the header a definite width so its container query resolves
+               even before fitMobile() pins the exact grid width — an inline-size
+               container in the centered .container would otherwise collapse to 0
+               (its contents can't feed back into its own width), blanking the
+               title on the first frame. 100% = the (pre-scale) container width;
+               fitMobile() later overrides this inline with the exact grid width
+               so the subtitle/legend line up with the table edges. */
+            .header-group { width: 100%; }
+            /* With that width in hand, size the title in pure CSS: 3.7cqw always
+               fits the one-line heading (measured natural width ≈ 25.7 × font, so
+               3.7% leaves ~5% margin). This is what makes the heading robust — it
+               no longer depends on a JS measure-and-shrink pass that a slow load
+               or a stale cache could skip, which is how the title used to overflow
+               and clip. */
+            h1 { font-size: 3.7cqw; }
+            .legend { font-size: 0.95em; padding: 9px 18px; border-radius: 12px; }
             .movements-count, .opus-label .opus-byname { white-space: nowrap; overflow: hidden; }
         }
     </style>
@@ -802,12 +842,10 @@
             const c = document.querySelector('.container');
             if (!c) return;
             const hg = c.querySelector('.header-group');
-            const h1 = c.querySelector('h1');
             if (!MOBILE_MQ.matches) {
                 c.style.removeProperty('--mobile-scale');
                 document.body.style.height = '';
-                if (hg) hg.style.width = '';       // undo the mobile-only overrides
-                if (h1) h1.style.fontSize = '';
+                if (hg) hg.style.width = '';       // undo the mobile-only width pin
                 return;
             }
             // Fit the scale to the TABLE (the opus rows — all equal full-grid
@@ -830,20 +868,12 @@
                     (avail - 2 * MOBILE_MARGIN) / tableWidth);
                 c.style.setProperty('--mobile-scale', scale.toFixed(4));
                 // Pin the header block to the grid width so the subtitle's right
-                // edge and the legend line up with the grid's edges.
+                // edge and the legend line up with the grid's edges. This also
+                // gives the title's container query (3.7cqw, in the mobile @media
+                // rule) a stable width to size against, so the heading fits in
+                // pure CSS — no JS font measuring needed. It stays readable even
+                // if this pass is skipped: the container width is close enough.
                 if (hg) hg.style.width = tableWidth + 'px';
-                // Keep the nowrap title within the grid width so it can't overflow
-                // the now-constrained header (or dictate a wider scale). Reset to
-                // the CSS base first so this is idempotent across resizes; measure
-                // with scrollWidth (content width, ignoring the box constraint).
-                if (h1) {
-                    h1.style.fontSize = '';
-                    const natural = h1.scrollWidth;
-                    if (natural > tableWidth) {
-                        const px = parseFloat(getComputedStyle(h1).fontSize);
-                        h1.style.fontSize = (px * tableWidth / natural * 0.99).toFixed(2) + 'px';
-                    }
-                }
             }
             // Read the on-screen height AFTER applying the scale so body matches.
             document.body.style.height = Math.ceil(c.getBoundingClientRect().height) + 'px';
