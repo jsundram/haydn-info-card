@@ -109,6 +109,20 @@ Spotify links) pass straight through the service worker, uncached.
 (The generators live at the repo root: `src/make_web_data.py`,
 `src/screenshot.py`, `src/og_preview.py`.)
 
+**Offline behavior is tested.** `sw.js` serves the shell **cache-first** (instant,
+no network on the critical path), falling back to a **bounded** network fetch only
+when the cache can't answer — so a slow-but-alive connection ("lie-fi") can't hang
+the app. `web/sw.test.mjs` loads `sw.js` unmodified under a mocked service-worker
+environment and a fake clock, exercising those paths (cache-first hits, the warm/cold
+timeout bounds, offline fallbacks) deterministically:
+
+```sh
+node web/sw.test.mjs   # no dependencies; also run in CI + the pre-commit hook
+```
+
+CI (`.github/workflows/checks.yml`) runs this plus `src/sw_lint.py` on every push
+and PR.
+
 ## Deployment
 
 GitHub Pages, via [`.github/workflows/pages.yml`](../.github/workflows/pages.yml),

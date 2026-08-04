@@ -1,6 +1,14 @@
 #!/bin/bash
-# Warn-only guard: if this commit touches a precached web/sw.js SHELL file without bumping V,
-# the fix won't reach installed home-screen copies. See src/sw_lint.py.
-# Enable once per clone:  git config core.hooksPath .githooks
+# Warn-only guards for web/sw.js. Neither blocks the commit; CI (.github/workflows/checks.yml) runs
+# both with real exit codes. Enable once per clone:  git config core.hooksPath .githooks
+#
+# 1. Precache contract: touching a precached SHELL file without bumping V means the fix never
+#    reaches installed home-screen copies. See src/sw_lint.py.
 python3 src/sw_lint.py || echo "  (warning only — commit continues; bump V in web/sw.js if this was a real shell change)"
+
+# 2. Behavioral tests: the offline / lie-fi fetch-handler contract. Skipped quietly if node is
+#    absent (this repo's runtime tooling is Python; node is only needed for these).
+if command -v node >/dev/null 2>&1; then
+  node web/sw.test.mjs >/dev/null 2>&1 || echo "  (warning only — web/sw.test.mjs failed; run 'node web/sw.test.mjs' to see why)"
+fi
 exit 0
