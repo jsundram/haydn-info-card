@@ -1,4 +1,4 @@
-// pwa-starter: sw.js @ 77fcb35
+// pwa-starter: sw.js @ 9c197b0
 // Service worker: offline shell + cache-busting.  (Pattern from pwa-starter.)
 //
 // THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what refreshes the
@@ -104,6 +104,11 @@ async function missingFromShell(cache) {
 // KNOWN LIMITATION: a put() that fails for QUOTA is counted transient, which keeps the old cache
 // and so keeps consuming the quota that just ran out. Harmless at this shell's size; a larger
 // shell (precached PDFs/media) should evict the old version to make room instead of holding both.
+// TRANSIENT = a retry could fix it (5xx mid-deploy blip, 408, 429); any other non-ok status is a
+// definite server answer. Shared by ensureShellOnce()'s classification and the live branch's
+// navigation-error split — one predicate, so the two sites can't drift.
+const isTransientStatus = s => s >= 500 || s === 408 || s === 429;
+
 async function ensureShellOnce() {
   try {
     const c = await caches.open(V);
@@ -116,8 +121,7 @@ async function ensureShellOnce() {
           // entry. Every SHELL entry is same-origin, so there's no opaque case to exempt here.
           if (resp.redirected || resp.status === 206) return "transient";
           if (!resp.ok) {
-            return resp.status >= 500 || resp.status === 408 || resp.status === 429
-              ? "transient" : "permanent";
+            return isTransientStatus(resp.status) ? "transient" : "permanent";
           }
           return c.put(url, resp).then(() => "ok", () => "transient");
         })
@@ -437,7 +441,7 @@ self.addEventListener("fetch", e => {
         if (!resp.ok) {
           // A 4xx/5xx is a RESOLVED fetch, not a rejection. For a subresource, a good cached copy
           // beats handing the app an error body. For a NAVIGATION, split by whether a retry could
-          // ever fix it — the same transient/permanent judgment ensureShellOnce() documents:
+          // ever fix it — isTransientStatus(), the same judgment ensureShellOnce() applies:
           //   TRANSIENT (5xx mid-deploy, 408, 429) → throw into the catch. The only cached copy
           //     reachable here already FAILED bootable() (cache-first would have served it
           //     otherwise), so the honest try-again page beats both it and a raw error body.
@@ -445,9 +449,7 @@ self.addEventListener("fetch", e => {
           //     The offline page would LIE to an online user ("open it once with a connection")
           //     behind a Try Again loop that can never win; the real 404 is actionable.
           if (e.request.mode === "navigate") {
-            if (resp.status >= 500 || resp.status === 408 || resp.status === 429) {
-              throw new Error("http " + resp.status);
-            }
+            if (isTransientStatus(resp.status)) throw new Error("http " + resp.status);
             return resp;
           }
           return cacheLookup(e.request).then(r => r || resp);
