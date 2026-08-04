@@ -13,7 +13,10 @@
 //     (cachePut won't overwrite it) and a new deploy MUST bump V anyway (THE ONE RULE): a V bump
 //     installs the new shell and lights app.js's update pill. A background revalidate here would
 //     just be discarded, so there isn't one. Only an uncached or unbootable request falls through
-//     to a bounded network-first fetch, which ALWAYS ends at a real Response.
+//     to a bounded network-first fetch, which ALWAYS ends at a real Response. NB this rests on
+//     every live url being a SHELL file (it is today): a future NON-shell .html/.js would be
+//     served cache-first with no revalidation until a V bump collects the old generation — add
+//     such a file to SHELL (and bump V), don't lean on opportunistic caching to refresh it.
 //   JSON → paint from cache now. PRECACHED json (opera.json) is owned by the install, so a V bump
 //     is what refreshes it; any other same-origin json is stale-while-revalidate
 //   images and everything else → cache-first for speed; a V bump is what refreshes them
@@ -314,20 +317,29 @@ async function bootable(pathname) {
   return (await Promise.all(deps.map(u => cacheLookup(u)))).every(Boolean);
 }
 
-// The FALLBACK network fetch is BOUNDED by this timer. Cache-first (the live branch) means the
-// common, fully-cached load never reaches it; it runs only when the cache can't answer — a first
-// run, or an evicted/partial shell — and even there a slow-but-alive link ("lie-fi": a weak cell
-// signal, a captive portal that half-answers) must end at a real Response instead of hanging
-// respondWith() on a fetch that never settles. A FIRST-PAINT bound: generous enough for an
-// ordinarily sluggish connection to deliver its bytes, short enough that "the page won't open"
-// never happens when a usable cached copy is one lookup away.
+// The FALLBACK network fetch is BOUNDED by these timers. Cache-first (the live branch) means the
+// common, fully-cached load never reaches them; they run only when the cache can't answer — a
+// first run, or an evicted/partial shell — where a slow-but-alive link ("lie-fi": a weak cell
+// signal, a captive portal that half-answers) would otherwise hang respondWith() on a fetch that
+// never settles: the very blank screen this file fights, now with no end. Bounding turns that into
+// an eventual real Response.
+//
+// TWO bounds, because a timeout costs differently in the two states:
+//   WARM (a cached copy in hand — even a non-bootable one to fall back to): short. There's a real
+//     page one lookup away, so a stale-but-instant paint beats waiting on a dead-slow link.
+//   COLD (NOTHING cached — a first run, or a shell iOS evicted under storage pressure / after ~7
+//     idle days, the routine case ensureShellOnce() documents): longer, because the only fallback
+//     is offlineFallback()'s "try again" page and a working-but-slow link that would have delivered
+//     the real app at 8s shouldn't be cut off at 3s. But NOT unbounded: an evicted shell on a weak
+//     signal is exactly the reported failure, and an eventual honest page beats a permanent blank.
 const NET_TIMEOUT_MS = 3000;
+const NET_TIMEOUT_COLD_MS = 15000;
 
-// Reject `promise` if it hasn't settled within `ms`. Used only where a cached copy exists to fall
-// back to, so a timeout routes into the offline path rather than stranding the request. The
-// underlying fetch is untouched — racing a timer against it doesn't abort it — so the caller keeps
-// it alive under waitUntil. clearTimeout on settle so a resolved fetch doesn't hold a pending timer
-// (and the SW) awake for the remainder of the window.
+// Reject `promise` if it hasn't settled within `ms`, so a timeout routes into the offline catch
+// rather than stranding respondWith() on a fetch that never settles. The underlying fetch is
+// untouched — racing a timer against it doesn't abort it — so the caller keeps it alive under
+// waitUntil. clearTimeout on settle so a resolved fetch doesn't hold a pending timer (and the SW)
+// awake for the remainder of the window.
 function withTimeout(promise, ms) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("network timeout")), ms);
@@ -394,6 +406,12 @@ self.addEventListener("fetch", e => {
   // the new shell and lights the pill; see the strategy note up top). The network is touched only
   // when the cache CAN'T answer — a first run, or an evicted/partial shell — and that fetch is
   // bounded so even it can't hang on lie-fi.
+  //
+  // One accepted consequence of serving the shell from cache rather than the network: during a
+  // partial install (V bumped, top-up not yet complete), cacheLookup()'s whole-store fallback can
+  // pair a new-generation document with an old-generation subresource — index.html@vN with
+  // app.js@vN-1 — until the collect completes. bootable() guards d3 (a page dies without it) but
+  // not app.js, which only adds the update pill, so the window is cosmetic and self-heals.
   if (live) {
     e.respondWith((async () => {
       const cached = await cacheLookup(e.request);
@@ -410,24 +428,32 @@ self.addEventListener("fetch", e => {
       // first run since there is nothing else to show and it must end at a real Response.
       const net = fetch(e.request).then(resp => {
         cachePut(e.request, resp);   // a no-op for SHELL urls; repair is ensureShell()'s job
-        // A 4xx/5xx is a resolved fetch, so the catch below never sees it — serve the good cached
-        // copy instead of handing the app an error page.
-        if (!resp.ok) return cacheLookup(e.request).then(r => r || resp);
+        if (!resp.ok) {
+          // A 4xx/5xx is a RESOLVED fetch, not a rejection. For a subresource, a good cached copy
+          // beats handing the app an error body. For a NAVIGATION, though, the only cached copy
+          // reachable here already FAILED bootable() (cache-first would have served it otherwise),
+          // so returning it is the bare-header render the file rejects as worse than the honest
+          // fallback — throw so the catch decides (→ offlineFallback), don't serve the broken doc.
+          if (e.request.mode === "navigate") throw new Error("http " + resp.status);
+          return cacheLookup(e.request).then(r => r || resp);
+        }
         return resp;
       });
       try {
-        return await (cached ? withTimeout(net, NET_TIMEOUT_MS) : net);
+        // Bounded either way (see NET_TIMEOUT_*): WARM has a page to fall back to, COLD has only
+        // offlineFallback — but NEITHER may hang. A timeout, an offline rejection, or a navigation
+        // 5xx (thrown above) all land in the catch.
+        return await withTimeout(net, cached ? NET_TIMEOUT_MS : NET_TIMEOUT_COLD_MS);
       } catch {
-        // Offline, or too slow with only a non-bootable copy in hand. Keep the fetch alive so its
-        // eventual result is available to the next request (a no-op when it was a genuine offline
-        // rejection: net is already settled). Resolving respondWith() to undefined is the original
+        // Keep the fetch alive so its eventual result is available to the next request (a no-op
+        // when it already rejected). Resolving respondWith() to undefined is the original
         // blank-screen bug — WebKit fails the navigation with "Returned response is null" and iOS
         // paints a blank white page — so every branch below ends at a real Response.
         e.waitUntil(net.catch(() => {}));
 
-        // Both cases that reach here for a navigation — a cached-but-unbootable doc, and a true
-        // first run with nothing cached — still fail bootable(), and a document that can't load
-        // its d3 renders a bare header. The honest offline page beats that.
+        // For a navigation, a document that can't load its d3 renders a bare header — worse than
+        // the honest fallback. Re-checked LIVE (not from the pre-network snapshot): an
+        // "ensure-shell" repair can land inside the timeout window and flip this true.
         if (e.request.mode === "navigate" && !(await bootable(u.pathname))) {
           return offlineFallback(e.request);
         }
@@ -442,7 +468,10 @@ self.addEventListener("fetch", e => {
         const key = docKey(u.pathname);
         const shell = e.request.mode === "navigate" && (key === "" || key === "index.html")
           ? await cacheLookup("./index.html") : null;
-        return cached || shell || offlineFallback(e.request);
+        // Re-read the cache rather than trusting the pre-network snapshot: an "ensure-shell" repair
+        // (app.js pings it on every load) can land during the timeout window, and the fresh copy
+        // should win over the snapshot when it does.
+        return (await cacheLookup(e.request)) || cached || shell || offlineFallback(e.request);
       }
     })());
   } else {
