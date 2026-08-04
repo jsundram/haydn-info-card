@@ -423,9 +423,10 @@ self.addEventListener("fetch", e => {
         return cached;
       }
 
-      // No usable cached copy: first run, or an evicted/partial shell. Go to the network, BOUNDED
-      // when we at least hold something to fall back to (a non-bootable doc), unbounded on a true
-      // first run since there is nothing else to show and it must end at a real Response.
+      // No usable cached copy: first run, or an evicted/partial shell. Go to the network, bounded
+      // EITHER WAY (see the try below): short when a fallback page is in hand, longer
+      // (NET_TIMEOUT_COLD_MS) on a true first run where offlineFallback() is the only floor — but
+      // never unbounded, so it always ends at a real Response.
       const net = fetch(e.request).then(resp => {
         cachePut(e.request, resp);   // a no-op for SHELL urls; repair is ensureShell()'s job
         if (!resp.ok) {

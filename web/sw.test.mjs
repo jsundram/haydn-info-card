@@ -103,6 +103,14 @@ const bodyOf = (r) => (r ? (r._body ?? "(generated page)") : "(undefined!)");
 const isPending = async (p) => (await Promise.race([p.then(() => false), flush().then(() => true)]));
 
 // ---- assertions ------------------------------------------------------------
+// Seed a FAILING exit code up front. The suite runs inside an async IIFE; if the fetch handler
+// ever HANGS (e.g. a regression back to unbounded network-first), that IIFE never settles, and with
+// only the fake clock there's no real timer keeping the process alive — node would drain the event
+// loop and exit 0, staying green on the exact hang this suite exists to catch. The explicit
+// process.exit() at the very end is the ONLY sanctioned way to reach a clean exit; any earlier exit
+// (a hung await, a handler that rejects instead of settling respondWith) now surfaces as a red 1.
+process.exitCode = 1;
+
 let pass = 0, fail = 0;
 const ok = (name, cond, detail = "") => { if (cond) { pass++; console.log("  ok   -", name); } else { fail++; console.log("  FAIL -", name, detail); } };
 function reset(mode = "ok", status = 200) { CACHE.clear(); fetchMode = mode; fetchStatus = status; fetchCalls = 0; healEntry = null; now = 0; timers.clear(); }

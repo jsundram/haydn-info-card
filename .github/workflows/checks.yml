@@ -5,7 +5,11 @@ name: checks
 #   - node web/sw.test.mjs : behavioral tests of the fetch handler (cache-first, lie-fi bounds,
 #     offline fallbacks) against a mocked SW environment.
 #   - src/sw_lint.py       : the precache-contract checks (the pre-commit hook runs these warn-only;
-#     here they fail the build).
+#     here they fail the build). NB its headline check — a staged SHELL file touched without a V
+#     bump — reads `git diff --cached`, which is empty in a CI checkout, so THAT check only bites
+#     locally in the hook; CI enforces the other four (missing/renamed entries, cross-origin
+#     entries, V's numeric tail, VER_PREFIX agreement). Base-vs-head V comparison would be a
+#     separate enhancement.
 
 on:
   push:
