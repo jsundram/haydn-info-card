@@ -42,7 +42,7 @@ const ORIGIN = "https://ex.test";
 const BASE = ORIGIN + "/haydn-info-card/";
 const b = (p) => BASE + p;
 
-let fetchMode = "ok";        // "ok" | "slow" | "offline" | "offline-heal"
+let fetchMode = "ok";        // "ok" | "slow" | "offline" | "offline-heal" | "redirect"
 let fetchStatus = 200;       // status for "ok" mode
 let fetchCalls = 0;
 let healEntry = null;        // [url, response] inserted by "offline-heal" before it rejects
@@ -82,6 +82,9 @@ const fetchImpl = async (r) => {
   if (fetchMode === "offline") throw new Error("offline");
   if (fetchMode === "offline-heal") { if (healEntry) CACHE.set(href(healEntry[0]), healEntry[1]); throw new Error("offline"); }
   if (fetchMode === "slow") return new Promise(() => {});   // never settles → only a timeout ends it
+  // A navigation's redirect mode is "manual": the browser hands the SW an opaqueredirect
+  // (status 0, ok false) that respondWith must pass back for the browser to follow.
+  if (fetchMode === "redirect") return makeResponse("", { status: 0, type: "opaqueredirect" });
   return makeResponse("NET:" + href(r), { status: fetchStatus });
 };
 
@@ -172,6 +175,18 @@ const seedBootableShell = () => { CACHE.set(BASE, makeResponse("CACHED_ROOT")); 
   reset("ok", 500);
   r = await start(req(b("app.js")));
   ok("subresource + server 500 → returns the response (unchanged)", r && r.status === 500, `status=${r && r.status}`);
+
+  // ...but a PERMANENT 4xx is the server's honest answer: an online nav to a typo'd path must get
+  // the real 404, not an offline page lying "open it once with a connection" to an online user.
+  reset("ok", 404);
+  r = await start(req(b("typo.html"), "navigate"));
+  ok("online nav + 404 → server's 404, not the offline lie", r && r.status === 404, `status=${r && r.status}`);
+
+  // ...and an OPAQUEREDIRECT (nav redirect mode is "manual": status 0, ok false) is a healthy
+  // answer the browser must get back to follow.
+  reset("redirect");
+  r = await start(req(b("scatter"), "navigate"));
+  ok("online nav + 301 → opaqueredirect passed back, not offline page", r && r.type === "opaqueredirect", `type=${r && r.type} status=${r && r.status}`);
 
   // --- ISSUE 3: the catch re-reads the cache, catching a mid-window repair --
   reset("offline-heal");

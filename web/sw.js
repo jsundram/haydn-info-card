@@ -1,4 +1,4 @@
-// pwa-starter: sw.js @ dd763ca
+// pwa-starter: sw.js @ 77fcb35
 // Service worker: offline shell + cache-busting.  (Pattern from pwa-starter.)
 //
 // THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what refreshes the
@@ -429,13 +429,27 @@ self.addEventListener("fetch", e => {
       // never unbounded, so it always ends at a real Response.
       const net = fetch(e.request).then(resp => {
         cachePut(e.request, resp);   // a no-op for SHELL urls; repair is ensureShell()'s job
+        // A navigation's fetch runs with redirect mode "manual", so a server 301/302 arrives as
+        // an OPAQUEREDIRECT — status 0, ok FALSE, but a healthy answer the browser must be handed
+        // back so it can follow it. Treating it as an error would show the offline page while
+        // fully online. Subresources never see one (their redirect mode is "follow").
+        if (resp.type === "opaqueredirect") return resp;
         if (!resp.ok) {
           // A 4xx/5xx is a RESOLVED fetch, not a rejection. For a subresource, a good cached copy
-          // beats handing the app an error body. For a NAVIGATION, though, the only cached copy
-          // reachable here already FAILED bootable() (cache-first would have served it otherwise),
-          // so returning it is the bare-header render the file rejects as worse than the honest
-          // fallback — throw so the catch decides (→ offlineFallback), don't serve the broken doc.
-          if (e.request.mode === "navigate") throw new Error("http " + resp.status);
+          // beats handing the app an error body. For a NAVIGATION, split by whether a retry could
+          // ever fix it — the same transient/permanent judgment ensureShellOnce() documents:
+          //   TRANSIENT (5xx mid-deploy, 408, 429) → throw into the catch. The only cached copy
+          //     reachable here already FAILED bootable() (cache-first would have served it
+          //     otherwise), so the honest try-again page beats both it and a raw error body.
+          //   PERMANENT (other 4xx — a typo'd link, a deleted page) → serve the server's answer.
+          //     The offline page would LIE to an online user ("open it once with a connection")
+          //     behind a Try Again loop that can never win; the real 404 is actionable.
+          if (e.request.mode === "navigate") {
+            if (resp.status >= 500 || resp.status === 408 || resp.status === 429) {
+              throw new Error("http " + resp.status);
+            }
+            return resp;
+          }
           return cacheLookup(e.request).then(r => r || resp);
         }
         return resp;
