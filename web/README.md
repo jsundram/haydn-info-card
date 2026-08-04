@@ -80,7 +80,8 @@ per-quartet QR codes that the Boccherini card has.
   installed copy.
 - `make-icons.sh` — rasterize the icon SVGs → the PNGs (needs `rsvg-convert`).
 - `build.sh` — regenerate data + share-sheet previews + screenshots.
-- `shot.sh` — quick desktop screenshot (no Python).
+- `shot.sh` — quick screenshot, no Python; env flags for the phone layout, dark
+  mode, and retina close-ups (see Build / screenshots).
 
 ## Install & offline (PWA)
 
@@ -206,8 +207,22 @@ uv run src/screenshot.py -o /tmp/iphone.png                 # iPhone (default)
 uv run src/screenshot.py -o /tmp/desk.png --width 1500 --scale 2 --no-mobile
 ```
 
-`./shot.sh [out.png]` is a lighter zero-Python desktop shot (fixed size, not
-full-page).
+`./shot.sh [out.png]` is a lighter zero-Python shot (fixed size, not full-page),
+steered by env flags:
+
+```sh
+./shot.sh out.png                            # desktop, 1500×2150
+WIDTH=1200 HEIGHT=1700 ./shot.sh out.png     # any window size
+MOBILE=1 ./shot.sh out.png                   # phone layout, defaults to 390×844
+MOBILE=1 DARK=1 DSF=3 HEIGHT=280 ./shot.sh header.png   # dark retina close-up
+```
+
+`MOBILE=1` exists because the phone layout is gated on `(hover: none) and
+(pointer: coarse)`, which the headless shell can never satisfy — it rewrites that
+media query to plain `(max-width: 800px)` in the temp page (CSS and the matching
+JS `MOBILE_MQ`). Close emulation, not the shipped query: it can't catch bugs in
+the hover/pointer terms themselves. `DARK=1` uses the `.dark-mode` testing class
+(not real `prefers-color-scheme`), and `DSF` sets the device scale factor.
 
 ## Viewing locally
 
