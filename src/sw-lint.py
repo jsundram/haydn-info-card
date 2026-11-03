@@ -22,7 +22,7 @@ them so they match git's repo-relative staged names. Adapted from pwa-starter/sc
 @ b1e34e1.
 
 The pre-commit hook runs it warn-only; run it in CI with a real exit code. By hand:
-    uv run src/sw_lint.py     (or: python3 src/sw_lint.py)
+    uv run src/sw-lint.py     (or: python3 src/sw-lint.py)
 """
 import os
 import re

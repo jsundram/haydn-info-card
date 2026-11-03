@@ -4,7 +4,7 @@ name: checks
 # so both halves run on every push and PR with real exit codes:
 #   - node web/sw.test.mjs : behavioral tests of the fetch handler (cache-first, lie-fi bounds,
 #     offline fallbacks) against a mocked SW environment.
-#   - src/sw_lint.py       : the precache-contract checks (the pre-commit hook runs these warn-only;
+#   - src/sw-lint.py       : the precache-contract checks (the pre-commit hook runs these warn-only;
 #     here they fail the build). NB its headline check — a staged SHELL file touched without a V
 #     bump — reads `git diff --cached`, which is empty in a CI checkout, so THAT check only bites
 #     locally in the hook; CI enforces the other four (missing/renamed entries, cross-origin
@@ -28,5 +28,5 @@ jobs:
         run: node --check web/sw.js
       - name: behavioral tests (web/sw.test.mjs)
         run: node web/sw.test.mjs
-      - name: precache lint (src/sw_lint.py)
-        run: python3 src/sw_lint.py
+      - name: precache lint (src/sw-lint.py)
+        run: python3 src/sw-lint.py

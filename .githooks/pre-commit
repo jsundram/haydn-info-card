@@ -3,8 +3,8 @@
 # both with real exit codes. Enable once per clone:  git config core.hooksPath .githooks
 #
 # 1. Precache contract: touching a precached SHELL file without bumping V means the fix never
-#    reaches installed home-screen copies. See src/sw_lint.py.
-python3 src/sw_lint.py || echo "  (warning only — commit continues; bump V in web/sw.js if this was a real shell change)"
+#    reaches installed home-screen copies. See src/sw-lint.py.
+python3 src/sw-lint.py || echo "  (warning only — commit continues; bump V in web/sw.js if this was a real shell change)"
 
 # 2. Behavioral tests: the offline / lie-fi fetch-handler contract. Skipped quietly if node is
 #    absent (this repo's runtime tooling is Python; node is only needed for these).

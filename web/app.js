@@ -64,7 +64,7 @@ async function checkVer() {
     // comments now cite version names as examples, so an unanchored /haydn-v\d+/ scan would
     // match a comment and pin a permanent "Update available" pill that does nothing when tapped
     // (forceUpdate() clears caches, reloads, and re-reads the same comment). Same expression as
-    // ../src/sw_lint.py's ver(); keep the two in agreement.
+    // ../src/sw-lint.py's ver(); keep the two in agreement.
     latest = (src.match(/const V\s*=\s*"([^"]*)"/) || ["", ""])[1];
   } catch {}                                  // offline: leave latest empty → no false "behind"
 

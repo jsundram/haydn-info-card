@@ -96,11 +96,11 @@ stale cache on the next visit — **bump `V` whenever you change any precached f
 (`index.html`, `scatter.html`, `opera.json`, `app.js`, an icon, …). Forget it and
 your fix ships to the repo but never to anyone's installed home-screen copy (iOS
 caches the service worker aggressively). `app.js` surfaces a "tap to update" pill
-as a safety net, and `../src/sw_lint.py` guards it at commit time:
+as a safety net, and `../src/sw-lint.py` guards it at commit time:
 
 ```sh
 git config core.hooksPath .githooks   # once per clone — enables the warn-only pre-commit
-uv run src/sw_lint.py                  # or run it by hand / in CI
+uv run src/sw-lint.py                  # or run it by hand / in CI
 ```
 
 The `*-preview.png` share cards are deliberately **not** precached (they're only
@@ -121,7 +121,7 @@ timeout bounds, offline fallbacks) deterministically:
 node web/sw.test.mjs   # no dependencies; also run in CI + the pre-commit hook
 ```
 
-CI (`.github/workflows/checks.yml`) runs this plus `src/sw_lint.py` on every push
+CI (`.github/workflows/checks.yml`) runs this plus `src/sw-lint.py` on every push
 and PR.
 
 ## Deployment

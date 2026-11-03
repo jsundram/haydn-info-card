@@ -3,7 +3,7 @@
 //
 // THE ONE RULE: bump V whenever you change a precached SHELL file. A new V is what refreshes the
 // shell — forget the bump and your fix ships to the repo but never to anyone's installed
-// home-screen copy (iOS caches the SW aggressively). ../src/sw_lint.py guards this, and app.js
+// home-screen copy (iOS caches the SW aggressively). ../src/sw-lint.py guards this, and app.js
 // surfaces a "tap to update" pill so a stuck phone is fixable in one tap.
 //
 // Strategy, by what the file IS rather than where it lives:
@@ -34,7 +34,7 @@ const V = "haydn-v16";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem free
 
 // "haydn-v" — the stem shared by every cache generation. app.js's VER_PREFIX must match it, and
 // the NUMERIC TAIL is load-bearing: it orders generations for the collect below and for
-// checkVer()'s ranking in app.js. ../src/sw_lint.py rejects a V without digits at commit time.
+// checkVer()'s ranking in app.js. ../src/sw-lint.py rejects a V without digits at commit time.
 const V_STEM = V.replace(/\d+$/, "");
 
 // Numeric generation of a cache name, or null if it isn't one of ours. Used to make the collect
@@ -96,7 +96,7 @@ const isTransientStatus = s => s >= 500 || s === 408 || s === 429;
 // generations then live on the device permanently, with the old one still answering (via
 // cacheLookup's whole-store fallback) for anything absent from the new one. A 404 is a bug in the
 // SHELL list that no amount of retrying repairs, so it must not hold the collect hostage;
-// everything genuinely retryable still does. ../src/sw_lint.py catches the repo-side version of
+// everything genuinely retryable still does. ../src/sw-lint.py catches the repo-side version of
 // this at commit time, before it can ship — this path is damage control, not the guard.
 //
 // Deliberately CONSERVATIVE about what counts as permanent, because guessing wrong trades a
@@ -204,7 +204,7 @@ async function topUpThenCollect() {
     // no claim on them, and "delete everything unfamiliar" is how a SW eats a sibling app's
     // storage on a shared origin. V MUST END IN DIGITS: without a numeric tail verNum(V) is null,
     // `n < null` is false for every cache, and collection silently stops — no error, no symptom,
-    // until generations pile up. ../src/sw_lint.py rejects that shape at commit time; this is
+    // until generations pile up. ../src/sw-lint.py rejects that shape at commit time; this is
     // the runtime half of the contract.
     const mine = verNum(V);
     if (mine === null) return 0;
