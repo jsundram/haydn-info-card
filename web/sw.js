@@ -30,11 +30,11 @@
 //   3. is a complete-looking cache BOOTABLE? → bootable() / offlineFallback()
 // The seven review rounds behind this design: pwa-starter#7.
 
-const V = "haydn-v16";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem freely; keep the digits)
+const V = "haydn-v17";   // <-- BUMP ON EVERY SHELL CHANGE (rename the stem freely; keep the digits)
 
 // "haydn-v" — the stem shared by every cache generation. app.js's VER_PREFIX must match it, and
-// the NUMERIC TAIL is load-bearing: it orders generations for the collect below and for
-// checkVer()'s ranking in app.js. ../src/sw-lint.py rejects a V without digits at commit time.
+// the NUMERIC TAIL is load-bearing: it orders generations for the collect below.
+// ../src/sw-lint.py rejects a V without digits at commit time.
 const V_STEM = V.replace(/\d+$/, "");
 
 // Numeric generation of a cache name, or null if it isn't one of ours. Used to make the collect
@@ -166,10 +166,9 @@ self.addEventListener("install", e => {
 // one-shot in activate: CacheStorage.match() iterates caches in CREATION order, so while an old
 // version lingers it ANSWERS FIRST and shadows the current shell (caches ['haydn-v8','haydn-v10']
 // both holding a URL resolve to the v8 copy). A lingering old cache means the device serves the
-// previous release offline, and checkVer() reads the wrong installed version. cacheLookup()
-// closes the read-path shadowing by construction, but the storage cost and the checkVer()
-// confusion persist until something collects — and activate fires once per SW version, hence the
-// retry from the message handler below, the only hook that runs after activation.
+// previous release offline. cacheLookup() closes the read-path shadowing by construction, but
+// the storage cost persists until something collects — and activate fires once per SW version,
+// hence the retry from the message handler below, the only hook that runs after activation.
 async function topUpThenCollect() {
   const { transient, permanent } = await ensureShell();
   if (transient > 0) return transient;              // keep the old cache as a net, try again later

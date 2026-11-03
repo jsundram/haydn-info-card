@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Commit-time checks for web/sw.js's precache contract.
 
-web/sw.js precaches the app SHELL. Five mistakes are cheap to catch here and expensive at runtime:
+web/sw.js precaches the app SHELL. Six mistakes are cheap to catch here and expensive at runtime:
 
 1. A staged SHELL file with an unchanged V. An edit to a precached file only reaches installed
    clients when V changes — forget the bump and the fix ships to the repo but never to anyone's
@@ -11,11 +11,17 @@ web/sw.js precaches the app SHELL. Five mistakes are cheap to catch here and exp
    still answering via the whole-store fallback. (pwa-starter#7)
 3. A cross-origin SHELL entry. The fetch handler passes other origins straight through, so the
    entry would be cached but never served — vendor the file locally instead.
-4. A V without a numeric tail. The tail orders generations for sw.js's collect and app.js's
-   checkVer() ranking; a non-numeric V makes collection silently stop, no error, no symptom,
-   until caches pile up. Rename the stem freely — keep the digits.
-5. app.js's VER_PREFIX not matching V's stem. checkVer() ranks installed caches by that prefix,
-   so a renamed stem on one side silently breaks the update pill. The stems must agree.
+4. A V without a numeric tail. The tail is what makes sw.js's collect DIRECTIONAL — it deletes
+   only strictly older generations — so a non-numeric V makes collection silently stop, no error,
+   no symptom, until caches pile up. Rename the stem freely — keep the digits.
+5. app.js's VER_PREFIX not matching V's stem. checkVer() uses that prefix to decide whether a
+   worker is installed at all, so a renamed stem on one side silently breaks the update pill.
+   The stems must agree.
+6. app.js's APP_V not matching V. APP_V is the version the running bundle REPORTS, and what
+   checkVer() compares against the server. A cache key describes what is STORED, not what the
+   page is executing, so it cannot answer this — let the pair drift and a client running a stale
+   bundle compares the wrong number: the pill stays hidden on exactly the device that needs it.
+   (pwa-starter#17)
 
 Paths in sw.js's SHELL are relative to web/ (e.g. "./index.html" -> web/index.html); this prefixes
 them so they match git's repo-relative staged names. Adapted from pwa-starter/scripts/sw-lint.py
@@ -66,8 +72,8 @@ def main():
     problems = []
 
     if v is not None and not re.search(r"\d+$", v):
-        problems.append(f'V is "{v}", which has no numeric tail. The tail orders cache '
-                        "generations (sw.js's collect, app.js's ranking) — rename the stem "
+        problems.append(f'V is "{v}", which has no numeric tail. The tail is what makes '
+                        "sw.js's collect directional (older generations only) — rename the stem "
                         "freely, but keep the digits.")
 
     app = sh("git", "show", f":{APP}")
@@ -76,8 +82,22 @@ def main():
         stem = re.sub(r"\d+$", "", v)
         if m and m.group(1) != stem:
             problems.append(f'{APP}\'s VER_PREFIX is "{m.group(1)}" but sw.js\'s V stem is '
-                            f'"{stem}" — checkVer() ranks caches by that prefix, so the update '
-                            "pill silently stops tracking this app. Keep the two in agreement.")
+                            f'"{stem}" — checkVer() looks for caches under that prefix, so the '
+                            "update pill silently stops tracking this app. Keep the two in "
+                            "agreement.")
+
+        # Check 6. APP_V is the version the RUNNING bundle reports about itself, and what
+        # checkVer() compares against the deployed sw.js. A cache key describes what is stored,
+        # not what the page is executing, so after skipWaiting()/clients.claim() the two diverge
+        # permanently and a key-based check goes quiet on exactly the stranded device
+        # (pwa-starter#17). Let the pair drift and the comparison reads the wrong number: the pill
+        # never appears, on the release it exists to rescue. Nothing else guards this.
+        mv = re.search(r'const APP_V\s*=\s*"([^"]*)"', app.stdout)
+        if mv and mv.group(1) != v:
+            problems.append(f'{APP}\'s APP_V is "{mv.group(1)}" but sw.js\'s V is "{v}" — '
+                            "checkVer() reports APP_V as the version this device is RUNNING, so "
+                            "a drifted pair compares the wrong number and the pill goes quiet on "
+                            "a stale client. Bump both together.")
 
     top = sh("git", "rev-parse", "--show-toplevel").stdout.strip()
     for entry in entries:
